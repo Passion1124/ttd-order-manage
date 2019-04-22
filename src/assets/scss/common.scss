@@ -1,0 +1,44 @@
+body{
+  margin: 0;
+}
+
+.common_header{
+  position: relative;
+  width: 100%;
+  height: 73px;
+  background-color: #3B53FF;
+  box-shadow:0 1px 7px 2px rgba(160,171,254,1);
+}
+
+.common_title{
+  padding-top: 31px;
+  font-size: 20px;
+  line-height: 28px;
+  text-align: center;
+  color: #fff;
+}
+
+.icon_row{
+  position: absolute;
+  right: 36px;
+  top: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.icon_row>div{
+  width: 35px;
+  height: 35px;
+  margin-right: 25px;
+}
+
+.icon_row>div:last-of-type{
+  margin-right: 0;
+}
+
+.icon_row>div img{
+  width: 100%;
+  height: 100%;
+  vertical-align: top;
+  cursor: pointer;
+}
