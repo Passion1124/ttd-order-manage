@@ -24,7 +24,7 @@
                         <img src="@/assets/images/right_arrow.png" alt="">
                     </div>
                 </div>
-                <div class="calendar_text">2019年4月9日</div>
+                <div class="calendar_text">{{ showFormatDate }}</div>
                 <div class="calendar_switch">
                     <div class="calendar_btn">
                         <img src="@/assets/images/calendar.png" alt="">
@@ -46,6 +46,16 @@
                         <div>星期四</div>
                         <div>星期五</div>
                         <div>星期六</div>
+                    </div>
+                    <div class="date_list">
+                        <template v-if="currentWeek">
+                            <div v-for="(item, index) in currentWeek" :key="'0' + index"></div>
+                        </template>
+                        <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.day.getMonth() + 1 === currentMonth}">
+                            <template v-if="item.day.getMonth() + 1 === currentMonth">
+                                <div class="date">{{item.day.getDate() >= 10 ? item.day.getDate() : '0' + item.day.getDate()}}</div>
+                            </template>
+                        </div>
                     </div>
                 </div>
                 <div class="type_is_month"></div>
@@ -82,7 +92,86 @@
 
 <script>
     export default {
-        name: "order_date_index"
+        name: "order_date_index",
+        data () {
+            return {
+                currentDay: 1,
+                currentMonth: 1,
+                currentYear: 1970,
+                currentWeek: 1,
+                days: [],
+                showFormatDate: ''
+            }
+        },
+        created () {
+            this.initData('2019-03-22');
+            console.log(this.days);
+        },
+        methods: {
+            initData (cur) {
+                let count = 0; // 存放剩余数量
+                let date;
+                if (cur) {
+                    date = new Date(cur);
+                    this.showFormatDate = this.formatDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+                } else {
+                    let now = new Date();
+                    this.showFormatDate = this.formatDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
+                    let d = new Date(this.formatDate(now.getFullYear() , now.getMonth() , 1));
+                    d.setDate(35);
+                    date = new Date(this.formatDate(d.getFullYear(),d.getMonth() + 1,1));
+                }
+                this.currentDay = date.getDate();
+                this.currentYear = date.getFullYear();
+                this.currentMonth = date.getMonth() + 1;
+                this.currentWeek = date.getDay();
+                let str = this.formatDate(this.currentYear , this.currentMonth, this.currentDay);
+                this.days.length = 0;
+                // 今天是周日，放在第一行第7个位置，前面6个
+                //初始化本周
+                for (let i = this.currentWeek - 1; i >= 0; i--) {
+                    let d = new Date(str);
+                    d.setDate(d.getDate() - i);
+                    let dayobject = {}; //用一个对象包装Date对象  以便为以后预定功能添加属性
+                    dayobject.day = d;
+                    this.days.push(dayobject);//将日期放入data 中的days数组 供页面渲染使用
+                }
+                //其他周
+                for (let i = 1; i <= 35 - this.currentWeek; i++) {
+                    let d = new Date(str);
+                    d.setDate(d.getDate() + i);
+                    let dayobject = {};
+                    dayobject.day = d;
+                    this.days.push(dayobject);
+                }
+            },
+            pickPre (year, month) {
+
+                // setDate(0); 上月最后一天
+                // setDate(-1); 上月倒数第二天
+                // setDate(dx) 参数dx为 上月最后一天的前后dx天
+                let d = new Date(this.formatDate(year , month , 1));
+                d.setDate(0);
+                this.initData(this.formatDate(d.getFullYear(),d.getMonth() + 1,1));
+            },
+            pickNext (year, month) {
+                let d = new Date(this.formatDate(year , month , 1));
+                d.setDate(35);
+                this.initData(this.formatDate(d.getFullYear(),d.getMonth() + 1,1));
+            },
+            pickYear (year, month) {
+                alert(year + "," + month);
+            },
+            // 返回 类似 2016-01-02 格式的字符串
+            formatDate (year, month, day) {
+                let y = year;
+                let m = month;
+                if (m<10) m = "0" + m;
+                let d = day;
+                if (d<10) d = "0" + d;
+                return y+"-"+m+"-"+d
+            }
+        }
     }
 </script>
 
@@ -183,6 +272,7 @@
                 height: 530px;
                 background-color: #fff;
                 box-shadow: 0 1px 7px 2px rgba(238,240,255,1);
+                overflow: hidden;
                 .type_is_day{
                     > div:not(:last-of-type) {
                         border-bottom: 1px solid #E2F0FF;
@@ -200,6 +290,34 @@
                             text-align: center;
                             padding-top: 19px;
                             box-sizing: border-box;
+                        }
+                    }
+                    .date_list{
+                        display: flex;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        >div{
+                            width: 14.2857%;
+                            height: 95px;
+                            box-sizing: border-box;
+                            background-color: #E4EFFC;
+                            &.isCurrent{
+                                border-right: 1px solid #E2F0FF; /* px */
+                                border-bottom: 1px solid #E2F0FF; /* px */
+                                background-color: #fff;
+                            }
+                            &:nth-of-type(7n){
+                                border-right: 0;
+                            }
+                            .date{
+                                width: 25px;
+                                height: 25px;
+                                font-size: 16px;
+                                line-height: 25px;
+                                border-radius: 50%;
+                                color: #9B9B9B;
+                                margin: 4px 0 0 7px;
+                            }
                         }
                     }
                 }
