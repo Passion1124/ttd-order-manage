@@ -6,7 +6,7 @@
                 <div class="preview_icon">
                     <img src="@/assets/images/preview.png" alt="">
                 </div>
-                <div class="add_icon">
+                <div class="add_icon" @click="handleGoToTheAddOrderPage">
                     <img src="@/assets/images/add.png" alt="">
                 </div>
                 <div class="remind_icon">
@@ -170,6 +170,11 @@
                 let d = day;
                 if (d<10) d = "0" + d;
                 return y+"-"+m+"-"+d
+            },
+            handleGoToTheAddOrderPage () {
+                this.$router.push({
+                    name: 'add_order'
+                })
             }
         }
     }

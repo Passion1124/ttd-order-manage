@@ -18,6 +18,21 @@ body{
   color: #fff;
 }
 
+.back_arrow{
+  position: absolute;
+  left: 35px;
+  top: 31px;
+  width: 16px;
+  height: 28px;
+  z-index: 3;
+}
+
+.back_arrow img{
+  width: 100%;
+  height: 100%;
+  vertical-align: top;
+}
+
 .icon_row{
   position: absolute;
   right: 36px;
