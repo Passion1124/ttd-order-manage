@@ -9,7 +9,7 @@
                 <div class="add_icon" @click="handleGoToTheAddOrderPage">
                     <img src="@/assets/images/add.png" alt="">
                 </div>
-                <div class="remind_icon">
+                <div class="remind_icon" @click="handleGoToTheMessagePage">
                     <img src="@/assets/images/remind.png" alt="">
                 </div>
             </div>
@@ -17,22 +17,22 @@
         <div class="main_row">
             <div class="calendar_top">
                 <div class="arrow_button">
-                    <div class="left_btn">
+                    <div class="left_btn" @click="handleShowLastMonth">
                         <img src="@/assets/images/left_arrow.png" alt="">
                     </div>
-                    <div class="right_btn">
+                    <div class="right_btn" @click="handleShowNextMonth">
                         <img src="@/assets/images/right_arrow.png" alt="">
                     </div>
                 </div>
-                <div class="calendar_text">{{ showFormatDate }}</div>
+                <div class="calendar_text">{{ currentYear }}年{{ currentMonth }}月{{ currentDay }}日</div>
                 <div class="calendar_switch">
                     <div class="calendar_btn">
                         <img src="@/assets/images/calendar.png" alt="">
                     </div>
-                    <div class="today">今天</div>
+                    <div class="today" @click="handleUpdateDateIsNow">今天</div>
                     <div class="switch_type">
-                        <div class="month_type active">月</div>
-                        <div class="day_type">日</div>
+                        <div class="month_type" :class="{ active: switch_type === 'month' }" @click="handleUpdateSwitchType('month')">月</div>
+                        <div class="day_type" :class="{ active: switch_type === 'day' }" @click="handleUpdateSwitchType('day')">日</div>
                     </div>
                 </div>
             </div>
@@ -48,12 +48,9 @@
                         <div>星期六</div>
                     </div>
                     <div class="date_list">
-                        <template v-if="currentWeek">
-                            <div v-for="(item, index) in currentWeek" :key="'0' + index"></div>
-                        </template>
-                        <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.day.getMonth() + 1 === currentMonth}">
-                            <template v-if="item.day.getMonth() + 1 === currentMonth">
-                                <div class="date">{{item.day.getDate() >= 10 ? item.day.getDate() : '0' + item.day.getDate()}}</div>
+                        <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }">
+                            <template v-if="item.isNowMonth">
+                                <div class="date" :class="{ now: item.num === currentDay }">{{item.num >= 10 ? item.num : '0' + item.num }}</div>
                             </template>
                         </div>
                     </div>
@@ -98,83 +95,116 @@
                 currentDay: 1,
                 currentMonth: 1,
                 currentYear: 1970,
-                currentWeek: 1,
                 days: [],
-                showFormatDate: ''
+                showFormatDate: '',
+                switch_type: 'month'
             }
         },
+        computed: {},
         created () {
-            this.initData('2019-03-22');
-            console.log(this.days);
+            this.init();
         },
         methods: {
-            initData (cur) {
-                let count = 0; // 存放剩余数量
-                let date;
-                if (cur) {
-                    date = new Date(cur);
-                    this.showFormatDate = this.formatDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
-                } else {
+            init () {
+                this.changeYearMonthDay('now');
+            },
+            handleUpdateSwitchType (type) {
+                if (this.switch_type !== type) this.switch_type = type
+            },
+            changeYearMonthDay (type) {
+                if (type === 'now') {
                     let now = new Date();
-                    this.showFormatDate = this.formatDate(now.getFullYear(), now.getMonth() + 1, now.getDate());
-                    let d = new Date(this.formatDate(now.getFullYear() , now.getMonth() , 1));
-                    d.setDate(35);
-                    date = new Date(this.formatDate(d.getFullYear(),d.getMonth() + 1,1));
+                    this.currentYear = now.getFullYear();
+                    this.currentMonth = now.getMonth() + 1;
+                    this.currentDay = now.getDate();
+                } else {
+                    if (type === 'last') {
+                        this.currentMonth -= 1;
+                        if (this.currentMonth <= 0) {
+                            this.currentMonth = 12;
+                            this.currentYear -= 1;
+                        }
+                    } else if (type === 'next') {
+                        this.currentMonth += 1;
+                        if (this.currentMonth > 12) {
+                            this.currentMonth = 1;
+                            this.currentYear += 1;
+                        }
+                    }
                 }
-                this.currentDay = date.getDate();
-                this.currentYear = date.getFullYear();
-                this.currentMonth = date.getMonth() + 1;
-                this.currentWeek = date.getDay();
-                let str = this.formatDate(this.currentYear , this.currentMonth, this.currentDay);
-                this.days.length = 0;
-                // 今天是周日，放在第一行第7个位置，前面6个
-                //初始化本周
-                for (let i = this.currentWeek - 1; i >= 0; i--) {
-                    let d = new Date(str);
-                    d.setDate(d.getDate() - i);
-                    let dayobject = {}; //用一个对象包装Date对象  以便为以后预定功能添加属性
-                    dayobject.day = d;
-                    this.days.push(dayobject);//将日期放入data 中的days数组 供页面渲染使用
-                }
-                //其他周
-                for (let i = 1; i <= 35 - this.currentWeek; i++) {
-                    let d = new Date(str);
-                    d.setDate(d.getDate() + i);
-                    let dayobject = {};
-                    dayobject.day = d;
-                    this.days.push(dayobject);
-                }
+                this.createCalendar(this.currentYear, this.currentMonth, this.currentDay);
             },
-            pickPre (year, month) {
-
-                // setDate(0); 上月最后一天
-                // setDate(-1); 上月倒数第二天
-                // setDate(dx) 参数dx为 上月最后一天的前后dx天
-                let d = new Date(this.formatDate(year , month , 1));
-                d.setDate(0);
-                this.initData(this.formatDate(d.getFullYear(),d.getMonth() + 1,1));
+            handleUpdateDateIsNow () {
+                this.changeYearMonthDay('now');
             },
-            pickNext (year, month) {
-                let d = new Date(this.formatDate(year , month , 1));
-                d.setDate(35);
-                this.initData(this.formatDate(d.getFullYear(),d.getMonth() + 1,1));
+            handleShowLastMonth () {
+                this.changeYearMonthDay('last');
             },
-            pickYear (year, month) {
-                alert(year + "," + month);
-            },
-            // 返回 类似 2016-01-02 格式的字符串
-            formatDate (year, month, day) {
-                let y = year;
-                let m = month;
-                if (m<10) m = "0" + m;
-                let d = day;
-                if (d<10) d = "0" + d;
-                return y+"-"+m+"-"+d
+            handleShowNextMonth () {
+                this.changeYearMonthDay('next');
             },
             handleGoToTheAddOrderPage () {
                 this.$router.push({
                     name: 'add_order'
                 })
+            },
+            handleGoToTheMessagePage () {
+                this.$router.push({
+                    name: 'message'
+                })
+            },
+            // 是否为闰年
+            is_leap(year) {
+                return ( year % 100 === 0 ?(year % 400 === 0 ? 1 : 0) : (year % 4 === 0 ? 1 : 0));
+            },
+            // 创建一个月的日历
+            createCalendar(year, month, day){
+                this.days = [];
+                let nstr1 = new Date(year, month-1, 1);  //当月第一天
+                let firstDay = nstr1.getDay();   //当月第一天是星期几
+                let m_days = [31,28+this.is_leap(year),31,30,31,30,31,31,30,31,30,31]; //各月份的总天数
+                let lastMonth = '';  //上个月
+                let lastWeek = '';   //上个月的最后一天的星期数
+                let lastDays = '';
+                if(month === 1){
+                    lastMonth = 11;
+                    lastWeek = new Date(year-1,lastMonth,m_days[lastMonth]).getDay();
+                    lastDays = m_days[lastMonth]-lastWeek
+                }else{
+                    lastMonth = month-1;
+                    lastWeek = new Date(year,lastMonth-1,m_days[lastMonth-1]).getDay();
+                    lastDays = m_days[lastMonth-1]-lastWeek
+                }
+                let s = 1;
+                let id = 1;
+                for(let i = 0; i < 6; i++){
+                    for(let j = 0; j < 7; j++){
+                        let idx = i * 7 + j; //单元格自然序列号
+                        let date_str = idx - firstDay + 1; //计算日期
+                        //前一个月的最后几天
+                        if(date_str <= 0){
+                            //月份在1到12之间
+                            if(month > 1 && month <= 12){
+                                this.days.push({id:id++,num:lastDays++,isNowMonth:false,month:'last',checked:false})
+                                //月份为1
+                            }else if(month === 1){
+                                this.days.push({id:id++,num:lastDays++,isNowMonth:false,month:'last',checked:false})
+                            }
+                            //下一个月的开始几天
+                        }else if(date_str > m_days[lastMonth]){
+                            //月份在1到12之间
+                            if(month < 12 && month >= 1){
+                                this.days.push({id:id++,num:s++,isNowMonth:false,month:'next',checked:false})
+                                //月份为12
+                            }else if(month === 12){
+                                this.days.push({id:id++,num:s++,isNowMonth:false,month:'next',checked:false})
+                            }
+                            //当前月份
+                        }else{
+                            this.days.push({id:id++, num:date_str, isNowMonth:true, month:'now', checked:false})
+                        }
+                    }
+                }
             }
         }
     }
@@ -262,6 +292,7 @@
                             flex: 1;
                             text-align: center;
                             color: #fff;
+                            font-size: 18px;
                             line-height: 33px;
                             &.active{
                                 background-color: #fff;
@@ -274,7 +305,7 @@
             }
             .calendar_main{
                 width: 950px;
-                height: 530px;
+                height: 623px;
                 background-color: #fff;
                 box-shadow: 0 1px 7px 2px rgba(238,240,255,1);
                 overflow: hidden;
@@ -322,6 +353,11 @@
                                 border-radius: 50%;
                                 color: #9B9B9B;
                                 margin: 4px 0 0 7px;
+                                text-align: center;
+                                &.now{
+                                    background-color: #3B53FF;
+                                    color: #fff;
+                                }
                             }
                         }
                     }
