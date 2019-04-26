@@ -37,7 +37,7 @@
                 </div>
             </div>
             <div class="calendar_main">
-                <div class="type_is_day">
+                <div class="type_is_day" v-if="switch_type === 'month'">
                     <div class="week_title">
                         <div>星期天</div>
                         <div>星期一</div>
@@ -55,7 +55,103 @@
                         </div>
                     </div>
                 </div>
-                <div class="type_is_month"></div>
+                <div class="type_is_month" v-if="switch_type === 'day'">
+                    <div class="fixed_width">
+                        <div class="top">
+                            <div class="date">{{currentMonth}}月{{currentDay}}日</div>
+                            <div class="week">{{ getCheckedDateIsWeekNum }}</div>
+                        </div>
+                        <div class="center">
+                            <div class="remain">
+                                <img src="@/assets/images/remain.png" alt="">
+                            </div>
+                            <div>待处理</div>
+                        </div>
+                        <div class="bottom">
+                            <div class="table_row">
+                                <div class="other_info">
+                                    <span>VIP</span>
+                                    <img src="@/assets/images/smoke.png" alt="">
+                                </div>
+                                <div class="table_num">1号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info">
+                                    <img src="@/assets/images/no_smoking.png" alt="">
+                                </div>
+                                <div class="table_num">2号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">3号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">4号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">5号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">6号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">7号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">8号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">9号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">10号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">11号桌</div>
+                            </div>
+                            <div class="table_row">
+                                <div class="other_info"></div>
+                                <div class="table_num">12号桌</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="scroll_width">
+                        <div class="top">
+                            <div>9:30</div>
+                            <div>10:00</div>
+                            <div>10:30</div>
+                            <div>11:00</div>
+                            <div>11:30</div>
+                            <div>12:00</div>
+                            <div>12:30</div>
+                            <div>13:00</div>
+                            <div>13:30</div>
+                            <div>14:00</div>
+                            <div>14:30</div>
+                            <div>15:00</div>
+                            <div>15:30</div>
+                            <div>16:00</div>
+                            <div>16:30</div>
+                            <div>17:00</div>
+                            <div>17:30</div>
+                            <div>17:30</div>
+                            <div>17:30</div>
+                            <div>17:30</div>
+                            <div>17:30</div>
+                            <div>17:30</div>
+                        </div>
+                        <div class="center"></div>
+                        <div class="bottom"></div>
+                    </div>
+                </div>
             </div>
             <div class="calendar_bottom">
                 <div class="left_tips">
@@ -88,6 +184,8 @@
 </template>
 
 <script>
+    import { mapGetters } from 'vuex'
+    import fetch from '../../utils/fetch'
     export default {
         name: "order_date_index",
         data () {
@@ -97,16 +195,32 @@
                 currentYear: 1970,
                 days: [],
                 showFormatDate: '',
-                switch_type: 'month'
+                switch_type: 'day'
             }
         },
-        computed: {},
+        computed: {
+            ...mapGetters(['body']),
+            getCheckedDateIsWeekNum () {
+                let arr = ['天', '一', '二', '三', '四', '五', '六'];
+                let week = new Date(this.currentYear + '-' +  this.currentMonth + '-' + this.currentDay).getDay();
+                return '星期' + arr[week];
+            }
+        },
         created () {
             this.init();
         },
         methods: {
             init () {
                 this.changeYearMonthDay('now');
+            },
+            handleGetPreOrderDateList (startDate, endDate) {
+                let api = 'com.ttdtrip.api.order.apis.service.PreOrderDateListApiService';
+                let data = { base: this.body, startDate, endDate, mid: this.body.myUid };
+                fetch.post(api, data).then(r => {
+                    console.log(r);
+                }).catch(e => {
+                    console.error(e);
+                })
             },
             handleUpdateSwitchType (type) {
                 if (this.switch_type !== type) this.switch_type = type
@@ -159,6 +273,9 @@
             },
             // 创建一个月的日历
             createCalendar(year, month, day){
+                let p_date = '' + year + month + day;
+                let s_date = '' + year + month + 1;
+                this.handleGetPreOrderDateList(s_date, p_date);
                 this.days = [];
                 let nstr1 = new Date(year, month-1, 1);  //当月第一天
                 let firstDay = nstr1.getDay();   //当月第一天是星期几
@@ -305,11 +422,11 @@
             }
             .calendar_main{
                 width: 950px;
-                height: 623px;
                 background-color: #fff;
                 box-shadow: 0 1px 7px 2px rgba(238,240,255,1);
                 overflow: hidden;
                 .type_is_day{
+                    height: 623px;
                     > div:not(:last-of-type) {
                         border-bottom: 1px solid #E2F0FF;
                     }
@@ -359,6 +476,127 @@
                                     color: #fff;
                                 }
                             }
+                        }
+                    }
+                }
+                .type_is_month{
+                    display: flex;
+                    align-items: center;
+                    height: 530px;
+                    .fixed_width{
+                        width: 104px;
+                        min-width: 104px;
+                        height: 100%;
+                        .top {
+                            padding-top: 5px;
+                            text-align: center;
+                            border-right: 1px solid #fff; /* px */
+                            box-sizing: border-box;
+                            .date, .week{
+                                font-size: 16px;
+                                line-height: 23px;
+                            }
+                        }
+                        .center{
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            border-top: 1px solid #fff;
+                            background-color: #F5A623;
+                            .remain{
+                                width: 19px;
+                                height: 19px;
+                                margin-right: 6px;
+                                img {
+                                    width: 100%;
+                                    height: 100%;
+                                }
+                            }
+                            >div:last-of-type{
+                                font-size: 16px;
+                                line-height: 23px;
+                                color: #fff;
+                            }
+                        }
+                        .bottom {
+                            background-color: #fff;
+                            box-shadow:6px 2px 9px 0 rgba(169,180,255,0.21);
+                            overflow-y: auto;
+                            .table_row{
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                width: 100%;
+                                height: 40px;
+                                padding: 0 15px 0 9px;
+                                box-sizing: border-box;
+                                .other_info{
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: flex-end;
+                                    width: 28px;
+                                    span {
+                                        font-size: 8px;
+                                        line-height: 11px;
+                                        margin-right: 4px;
+                                        color: #9B9B9B;
+                                    }
+                                    img{
+                                        width: 16px;
+                                        height: 13px;
+                                    }
+                                }
+                                .table_num{
+                                    font-size: 16px;
+                                    line-height: 23px;
+                                    color: #9B9B9B;
+                                }
+                            }
+                        }
+                    }
+                    .scroll_width {
+                        flex: 1;
+                        max-width: 846px;
+                        overflow: auto;
+                        .top {
+                            display: flex;
+                            align-items: center;
+                            width: auto;
+                            padding: 0 10px;
+                            box-sizing: border-box;
+                            >div{
+                                width: 50px;
+                                min-width: 50px;
+                                height: 100%;
+                                font-size: 15px;
+                                line-height: 54px;
+                                text-align: center;
+                                color: #fff;
+                                background-color: #78B6FC;
+                            }
+                        }
+                        .center{
+                            width: auto;
+                        }
+                        .bottom {
+                            width: auto;
+                        }
+                    }
+                    >div{
+                        .top {
+                            width: 100%;
+                            height: 54px;
+                            background-color: #78B6FC;
+                            color: #fff;
+                        }
+                        .center{
+                            width: 100%;
+                            height: 41px;
+                            box-shadow:0 5px 9px 0 rgba(169,180,255,0.21);
+                        }
+                        .bottom {
+                            width: 100%;
+                            height: 436px;
                         }
                     }
                 }

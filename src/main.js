@@ -4,6 +4,7 @@ import router from './router'
 import store from './store'
 import '@/assets/scss/common.scss'
 import 'lib-flexible'
+import './permission'
 
 Vue.config.productionTip = false
 

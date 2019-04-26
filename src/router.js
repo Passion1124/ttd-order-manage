@@ -5,6 +5,7 @@ import addOrder from './views/add_order'
 import message from './views/message'
 import orderTreated from './views/order_treated'
 import tablePreview from './views/table_preview'
+import login from './views/login'
 
 Vue.use(Router)
 
@@ -13,6 +14,11 @@ export default new Router({
       {
           path: '/',
           redirect: '/order_date'
+      },
+      {
+          path: '/login',
+          name: 'login',
+          component: login
       },
       {
           path: '/order_date',

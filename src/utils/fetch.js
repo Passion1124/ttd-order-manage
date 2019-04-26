@@ -5,10 +5,11 @@
 */
 
 import axios from 'axios'
+import { getHeaderJson } from "./common";
 
 // 创建axios实例
 const service = axios.create({
-    baseURL: process.env.BASE_API,
+    baseURL: process.env.NODE_ENV === 'production' ? 'https://api.ttd-trip.com' : 'http://47.99.42.94:8080',
     timeout: 20000 // 接口超时时间
 });
 
@@ -21,10 +22,11 @@ service.interceptors.request.use(config => {
 service.interceptors.response.use(
     response => {
         const res = response.data;
-        if (res.code === '0000') {
+        if (res.ret_code === '0000') {
             return Promise.resolve(res)
         } else {
-            return Promise.reject(res)
+            alert(res.ret_msg);
+            return Promise.reject(res);
         }
     },
     error => {
@@ -33,4 +35,23 @@ service.interceptors.response.use(
     }
 );
 
-export default service
+const fetch = {
+    post (api, data) {
+        return service({
+            url: '/gateway/',
+            method: 'post',
+            data,
+            headers: getHeaderJson({ apiname: api, data: data })
+        })
+    },
+    get (api, data) {
+        return service({
+            url: '/gateway/',
+            method: 'get',
+            data,
+            headers: getHeaderJson({ apiname: api, data: data })
+        })
+    }
+};
+
+export default fetch
