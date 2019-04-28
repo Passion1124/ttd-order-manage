@@ -3,13 +3,13 @@
         <div class="common_header">
             <div class="common_title">餐厅名称</div>
             <div class="icon_row">
-                <div class="preview_icon">
+                <div class="preview_icon" @click="handleGoToTheTablePreview">
                     <img src="@/assets/images/preview.png" alt="">
                 </div>
                 <div class="add_icon" @click="handleGoToTheAddOrderPage">
                     <img src="@/assets/images/add.png" alt="">
                 </div>
-                <div class="remind_icon" @click="handleGoToTheMessagePage">
+                <div class="remind_icon" @click="handleGoToTheMessagePage" v-if="false">
                     <img src="@/assets/images/remind.png" alt="">
                 </div>
             </div>
@@ -24,7 +24,7 @@
                         <img src="@/assets/images/right_arrow.png" alt="">
                     </div>
                 </div>
-                <div class="calendar_text">{{ currentYear }}年{{ currentMonth }}月{{ currentDay }}日</div>
+                <div class="calendar_text">{{ getCalendarText }}</div>
                 <div class="calendar_switch">
                     <div class="calendar_btn">
                         <img src="@/assets/images/calendar.png" alt="">
@@ -48,9 +48,19 @@
                         <div>星期六</div>
                     </div>
                     <div class="date_list">
-                        <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }">
+                        <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }" @click="handleUpdateSelectDay(item)">
                             <template v-if="item.isNowMonth">
-                                <div class="date" :class="{ now: item.num === currentDay }">{{item.num >= 10 ? item.num : '0' + item.num }}</div>
+                                <div class="date" :class="{ now: select_day === getFullDate(item, '-') }">{{item.day >= 10 ? item.day : '0' + item.day }}</div>
+                                <template v-if="days_date[getFullDate(item, '')]">
+                                    <div class="wait_used" v-if="days_date[getFullDate(item, '')].waitUsedCount">
+                                        <div>待就餐</div>
+                                        <div>{{days_date[getFullDate(item, '')].waitUsedCount}}</div>
+                                    </div>
+                                    <div class="wait_confirm" v-if="days_date[getFullDate(item, '')].waitCount">
+                                        <div>待处理</div>
+                                        <div>{{days_date[getFullDate(item, '')].waitCount}}</div>
+                                    </div>
+                                </template>
                             </template>
                         </div>
                     </div>
@@ -184,7 +194,9 @@
 </template>
 
 <script>
+    import moment from 'moment'
     import { mapGetters } from 'vuex'
+    import { createCalendar } from "../../utils/common";
     import fetch from '../../utils/fetch'
     export default {
         name: "order_date_index",
@@ -193,9 +205,12 @@
                 currentDay: 1,
                 currentMonth: 1,
                 currentYear: 1970,
+                select_day: '',
                 days: [],
-                showFormatDate: '',
-                switch_type: 'day'
+                time_list: [],
+                table_list: [],
+                days_date: {},
+                switch_type: 'month'
             }
         },
         computed: {
@@ -204,6 +219,21 @@
                 let arr = ['天', '一', '二', '三', '四', '五', '六'];
                 let week = new Date(this.currentYear + '-' +  this.currentMonth + '-' + this.currentDay).getDay();
                 return '星期' + arr[week];
+            },
+            getCalendarText () {
+                return this.select_day ? moment(this.select_day).format('YYYY年MM月DD日') : moment().format('YYYY年MM月DD日');
+            }
+        },
+        watch: {
+            currentMonth () {
+                let s_date = moment().month(this.currentMonth - 1).startOf('month').format('YYYYMMDD');
+                let e_date = moment().month(this.currentMonth - 1).endOf('month').format('YYYYMMDD');
+                this.handleGetPreOrderDateList(s_date, e_date);
+            },
+            select_day (val) {
+                this.handlePreOrderListByTime();
+                this.handlePreOrderTableSchedule();
+                this.handlePreOrderBookTime();
             }
         },
         created () {
@@ -212,12 +242,57 @@
         methods: {
             init () {
                 this.changeYearMonthDay('now');
+                this.handlePreOrderList();
             },
+            // 预订单日期数据查询列表
             handleGetPreOrderDateList (startDate, endDate) {
                 let api = 'com.ttdtrip.api.order.apis.service.PreOrderDateListApiService';
                 let data = { base: this.body, startDate, endDate, mid: this.body.myUid };
                 fetch.post(api, data).then(r => {
                     console.log(r);
+                    this.days_date = r.days;
+                }).catch(e => {
+                    console.error(e);
+                })
+            },
+            // 时间点预订单列表(B端大屏)
+            handlePreOrderListByTime () {
+                let api = 'com.ttdtrip.api.order.apis.service.PreOrderListByTimeApiService';
+                let data = { base: this.body, date: this.select_day.replace(/-/g, ''), mid: this.body.myUid };
+                fetch.post(api, data).then(r => {
+                    console.log(r);
+                }).catch(e => {
+                    console.error(e);
+                })
+            },
+            // 预订单列表(B端)
+            handlePreOrderList () {
+                let api = 'com.ttdtrip.api.order.apis.service.PreOrderListApiService';
+                let data = { base: this.body, mid: this.body.myUid };
+                fetch.post(api, data).then(r => {
+                    console.log(r);
+                }).catch(e => {
+                    console.error(e);
+                })
+            },
+            // 预订单桌台日计划v2
+            handlePreOrderTableSchedule () {
+                let api = 'com.ttdtrip.api.order.apis.service.PreOrderTableScheduleApiService';
+                let data = { base: this.body, mid: this.body.myUid ,date: this.select_day.replace(/-/g, '') };
+                fetch.post(api, data).then(r => {
+                    console.log(r);
+                    this.table_list = r.schedules;
+                }).catch(e => {
+                    console.error(e);
+                })
+            },
+            // 预订单预约时间v2
+            handlePreOrderBookTime () {
+                let api = 'com.ttdtrip.api.order.apis.service.PreOrderBookTimeApiService';
+                let data = { base: this.body, mid: this.body.myUid, date: this.select_day.replace(/-/g, '') };
+                fetch.post(api, data).then(r => {
+                    console.log(r);
+                    this.time_list = r.schedules;
                 }).catch(e => {
                     console.error(e);
                 })
@@ -227,10 +302,10 @@
             },
             changeYearMonthDay (type) {
                 if (type === 'now') {
-                    let now = new Date();
-                    this.currentYear = now.getFullYear();
-                    this.currentMonth = now.getMonth() + 1;
-                    this.currentDay = now.getDate();
+                    this.currentYear = moment().year();
+                    this.currentMonth = moment().month() + 1;
+                    this.currentDay = moment().date();
+                    this.select_day = moment().format('YYYY-MM-DD');
                 } else {
                     if (type === 'last') {
                         this.currentMonth -= 1;
@@ -246,16 +321,38 @@
                         }
                     }
                 }
-                this.createCalendar(this.currentYear, this.currentMonth, this.currentDay);
+                this.days = createCalendar(this.currentYear, this.currentMonth, this.currentDay);
+            },
+            handleUpdateSelectDay (item) {
+                if (item.isNowMonth) {
+                    this.select_day = this.getFullDate(item, '-');
+                }
             },
             handleUpdateDateIsNow () {
-                this.changeYearMonthDay('now');
+                if (this.switch_type === 'month') {
+                    this.changeYearMonthDay('now');
+                } else {
+                    this.select_day = moment().format('YYYY-MM-DD');
+                }
             },
             handleShowLastMonth () {
-                this.changeYearMonthDay('last');
+                if (this.switch_type === 'month') {
+                    this.changeYearMonthDay('last');
+                } else {
+                    this.select_day = moment(moment(this.select_day).subtract(1, 'days')).format('YYYY-MM-DD');
+                }
             },
             handleShowNextMonth () {
-                this.changeYearMonthDay('next');
+                if (this.switch_type === 'month') {
+                    this.changeYearMonthDay('next');
+                } else {
+                    this.select_day = moment(moment(this.select_day).add(1, 'days')).format('YYYY-MM-DD');
+                }
+            },
+            handleGoToTheTablePreview () {
+                this.$router.push({
+                    name: 'table_preview'
+                })
             },
             handleGoToTheAddOrderPage () {
                 this.$router.push({
@@ -267,61 +364,11 @@
                     name: 'message'
                 })
             },
-            // 是否为闰年
-            is_leap(year) {
-                return ( year % 100 === 0 ?(year % 400 === 0 ? 1 : 0) : (year % 4 === 0 ? 1 : 0));
-            },
-            // 创建一个月的日历
-            createCalendar(year, month, day){
-                let p_date = '' + year + month + day;
-                let s_date = '' + year + month + 1;
-                this.handleGetPreOrderDateList(s_date, p_date);
-                this.days = [];
-                let nstr1 = new Date(year, month-1, 1);  //当月第一天
-                let firstDay = nstr1.getDay();   //当月第一天是星期几
-                let m_days = [31,28+this.is_leap(year),31,30,31,30,31,31,30,31,30,31]; //各月份的总天数
-                let lastMonth = '';  //上个月
-                let lastWeek = '';   //上个月的最后一天的星期数
-                let lastDays = '';
-                if(month === 1){
-                    lastMonth = 11;
-                    lastWeek = new Date(year-1,lastMonth,m_days[lastMonth]).getDay();
-                    lastDays = m_days[lastMonth]-lastWeek
-                }else{
-                    lastMonth = month-1;
-                    lastWeek = new Date(year,lastMonth-1,m_days[lastMonth-1]).getDay();
-                    lastDays = m_days[lastMonth-1]-lastWeek
-                }
-                let s = 1;
-                let id = 1;
-                for(let i = 0; i < 6; i++){
-                    for(let j = 0; j < 7; j++){
-                        let idx = i * 7 + j; //单元格自然序列号
-                        let date_str = idx - firstDay + 1; //计算日期
-                        //前一个月的最后几天
-                        if(date_str <= 0){
-                            //月份在1到12之间
-                            if(month > 1 && month <= 12){
-                                this.days.push({id:id++,num:lastDays++,isNowMonth:false,month:'last',checked:false})
-                                //月份为1
-                            }else if(month === 1){
-                                this.days.push({id:id++,num:lastDays++,isNowMonth:false,month:'last',checked:false})
-                            }
-                            //下一个月的开始几天
-                        }else if(date_str > m_days[lastMonth]){
-                            //月份在1到12之间
-                            if(month < 12 && month >= 1){
-                                this.days.push({id:id++,num:s++,isNowMonth:false,month:'next',checked:false})
-                                //月份为12
-                            }else if(month === 12){
-                                this.days.push({id:id++,num:s++,isNowMonth:false,month:'next',checked:false})
-                            }
-                            //当前月份
-                        }else{
-                            this.days.push({id:id++, num:date_str, isNowMonth:true, month:'now', checked:false})
-                        }
-                    }
-                }
+            getFullDate (obj, separator) {
+                let month = obj.months < 10 ? '0' + obj.months : obj.months;
+                let day = obj.day < 10 ? '0' + obj.day : obj.day;
+                let arr = [obj.year, month, day];
+                return arr.join(separator);
             }
         }
     }
@@ -473,6 +520,46 @@
                                 text-align: center;
                                 &.now{
                                     background-color: #3B53FF;
+                                    color: #fff;
+                                }
+                            }
+                            .wait_confirm {
+                                position: relative;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                width: 113px;
+                                height: 25px;
+                                padding: 0 8px;
+                                background: rgba(246,197,116,1);
+                                border-radius: 0 4px 4px 0;
+                                border-left: 3px solid #F5A623;
+                                box-sizing: border-box;
+                                margin-left: 11px;
+                                margin-top: 5px;
+                                >div{
+                                    font-size: 13px;
+                                    line-height: 19px;
+                                    color: #fff;
+                                }
+                            }
+                            .wait_used {
+                                position: relative;
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                width: 99px;
+                                height: 21px;
+                                padding: 0 8px;
+                                background: rgba(157,237,255,1);
+                                border-radius: 0 4px 4px 0;
+                                border-left: 3px solid #25D8FC;
+                                box-sizing: border-box;
+                                margin-left: 11px;
+                                margin-top: 5px;
+                                >div{
+                                    font-size: 13px;
+                                    line-height: 19px;
                                     color: #fff;
                                 }
                             }
