@@ -68,7 +68,7 @@
                 <div class="type_is_month" v-if="switch_type === 'day'">
                     <div class="fixed_width">
                         <div class="top">
-                            <div class="date">{{currentMonth}}月{{currentDay}}日</div>
+                            <div class="date">{{ getCalendarMonthAndDay }}</div>
                             <div class="week">{{ getCheckedDateIsWeekNum }}</div>
                         </div>
                         <div class="center">
@@ -134,54 +134,37 @@
                         </div>
                     </div>
                     <div class="scroll_width">
-                        <div class="top">
-                            <div>9:30</div>
-                            <div>10:00</div>
-                            <div>10:30</div>
-                            <div>11:00</div>
-                            <div>11:30</div>
-                            <div>12:00</div>
-                            <div>12:30</div>
-                            <div>13:00</div>
-                            <div>13:30</div>
-                            <div>14:00</div>
-                            <div>14:30</div>
-                            <div>15:00</div>
-                            <div>15:30</div>
-                            <div>16:00</div>
-                            <div>16:30</div>
-                            <div>17:00</div>
-                            <div>17:30</div>
-                            <div>17:30</div>
-                            <div>17:30</div>
-                            <div>17:30</div>
-                            <div>17:30</div>
-                            <div>17:30</div>
+                        <div>
+                            <div class="top">
+                                <div v-for="(item, index) in time_list" :key="index">{{ item.startTime }}</div>
+                            </div>
+                            <div class="center">
+                                <div v-for="(item, index) in time_list" :key="index"></div>
+                            </div>
+                            <div class="bottom"></div>
                         </div>
-                        <div class="center"></div>
-                        <div class="bottom"></div>
                     </div>
                 </div>
             </div>
             <div class="calendar_bottom">
                 <div class="left_tips">
                     <div>
-                        <div>未处理：</div>
-                        <div>今日应到店：</div>
+                        <div>未处理：{{ bottom_tips.remain }}</div>
+                        <div>今日应到店：{{ bottom_tips.should }}</div>
                     </div>
                     <div>
-                        <div>今日新订：</div>
-                        <div>今日实到店：</div>
+                        <div>今日新订：{{ bottom_tips.new_order }}</div>
+                        <div>今日实到店：{{ bottom_tips.solid }}</div>
                     </div>
                 </div>
                 <div class="right_tips">
                     <div class="eat">
                         <div class="tips_bg"></div>
-                        <div class="tips_text">已就餐</div>
+                        <div class="tips_text">就餐中</div>
                     </div>
                     <div class="order">
                         <div class="tips_bg"></div>
-                        <div class="tips_text">已预约</div>
+                        <div class="tips_text">待就餐</div>
                     </div>
                     <div class="handle">
                         <div class="tips_bg"></div>
@@ -210,18 +193,27 @@
                 time_list: [],
                 table_list: [],
                 days_date: {},
-                switch_type: 'month'
+                switch_type: 'month',
+                bottom_tips: {
+                    remain: 0,
+                    should: 0,
+                    solid: 0,
+                    new_order: 0
+                }
             }
         },
         computed: {
             ...mapGetters(['body']),
             getCheckedDateIsWeekNum () {
                 let arr = ['天', '一', '二', '三', '四', '五', '六'];
-                let week = new Date(this.currentYear + '-' +  this.currentMonth + '-' + this.currentDay).getDay();
+                let week = moment(this.select_day).day();
                 return '星期' + arr[week];
             },
             getCalendarText () {
                 return this.select_day ? moment(this.select_day).format('YYYY年MM月DD日') : moment().format('YYYY年MM月DD日');
+            },
+            getCalendarMonthAndDay () {
+                return moment(this.select_day).format('MM月DD日');
             }
         },
         watch: {
@@ -258,9 +250,14 @@
             // 时间点预订单列表(B端大屏)
             handlePreOrderListByTime () {
                 let api = 'com.ttdtrip.api.order.apis.service.PreOrderListByTimeApiService';
-                let data = { base: this.body, date: this.select_day.replace(/-/g, ''), mid: this.body.myUid };
+                let data = { base: this.body, date: this.select_day.replace(/-/g, ''), mid: this.body.myUid, needTotalCount: 1 };
                 fetch.post(api, data).then(r => {
                     console.log(r);
+                    if (moment().format('YYYYMMDD') === data.date) {
+                        this.bottom_tips.should = r.orders.filter(item => item.orderStatus === 3).length;
+                        this.bottom_tips.solid = r.orders.filter(item => item.orderStatus === 5).length;
+                        this.bottom_tips.new_order = r.totalCount;
+                    }
                 }).catch(e => {
                     console.error(e);
                 })
@@ -268,9 +265,10 @@
             // 预订单列表(B端)
             handlePreOrderList () {
                 let api = 'com.ttdtrip.api.order.apis.service.PreOrderListApiService';
-                let data = { base: this.body, mid: this.body.myUid };
+                let data = { base: this.body, mid: this.body.myUid, page: 1, size: 10000, needTotalCount: 1, hasConfirmed: 0 };
                 fetch.post(api, data).then(r => {
                     console.log(r);
+                    this.bottom_tips.remain = r.totalCount
                 }).catch(e => {
                     console.error(e);
                 })
@@ -646,12 +644,14 @@
                         max-width: 846px;
                         overflow: auto;
                         .top {
-                            display: flex;
-                            align-items: center;
-                            width: auto;
+                            /*display: flex;*/
+                            /*align-items: center;*/
+                            width: auto !important;
                             padding: 0 10px;
                             box-sizing: border-box;
+                            white-space: nowrap;
                             >div{
+                                display: inline-block;
                                 width: 50px;
                                 min-width: 50px;
                                 height: 100%;
@@ -663,7 +663,18 @@
                             }
                         }
                         .center{
-                            width: auto;
+                            /*display: flex;*/
+                            /*align-items: center;*/
+                            padding: 0 10px;
+                            box-sizing: border-box;
+                            >div{
+                                width: 50px;
+                                min-width: 50px;
+                                height: 100%;
+                                font-size: 15px;
+                                line-height: 54px;
+                                text-align: center;
+                            }
                         }
                         .bottom {
                             width: auto;
