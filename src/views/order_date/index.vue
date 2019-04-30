@@ -78,71 +78,27 @@
                             <div>待处理</div>
                         </div>
                         <div class="bottom">
-                            <div class="table_row">
+                            <div class="table_row" v-for="(item, index) in table_list" :key="index">
                                 <div class="other_info">
-                                    <span>VIP</span>
-                                    <img src="@/assets/images/smoke.png" alt="">
+                                    <span v-if="item.isBox">VIP</span>
+                                    <img src="@/assets/images/smoke.png" alt="" v-if="item.allowSmoke">
                                 </div>
-                                <div class="table_num">1号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info">
-                                    <img src="@/assets/images/no_smoking.png" alt="">
-                                </div>
-                                <div class="table_num">2号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">3号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">4号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">5号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">6号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">7号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">8号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">9号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">10号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">11号桌</div>
-                            </div>
-                            <div class="table_row">
-                                <div class="other_info"></div>
-                                <div class="table_num">12号桌</div>
+                                <div class="table_num">{{ item.no }}号桌</div>
                             </div>
                         </div>
                     </div>
                     <div class="scroll_width">
-                        <div>
-                            <div class="top">
+                        <div class="top">
+                            <div class="time_list_row">
                                 <div v-for="(item, index) in time_list" :key="index">{{ item.startTime }}</div>
                             </div>
-                            <div class="center">
-                                <div v-for="(item, index) in time_list" :key="index"></div>
-                            </div>
-                            <div class="bottom"></div>
                         </div>
+                        <div class="center">
+                            <div v-for="(item, index) in time_list" :key="index">
+                                <div class="wait" v-if="getWaitNumber(item, getWaitOrderList)" @click="handleShowOrderListPopup">{{ getWaitNumber(item, getWaitOrderList) }}</div>
+                            </div>
+                        </div>
+                        <div class="bottom"></div>
                     </div>
                 </div>
             </div>
@@ -173,6 +129,16 @@
                 </div>
             </div>
         </div>
+        <div class="mask" v-if="mask" @click="handleHideOrderListPopup"></div>
+        <div class="order_list" v-if="order_list_popup">
+            <div class="order" v-for="(item, index) in getWaitOrderList" :key="index" @click="handleGoToTheOrderTreatedPage(item)">
+                <div class="order_name">顾客{{ item.preOrder.contactor }}的订单</div>
+                <div class="order_arrow">
+                    <img class="hover" src="@/assets/images/order_hover_arrow.png" alt="">
+                    <img class="normal" src="@/assets/images/order_arrow.png" alt="">
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -192,6 +158,7 @@
                 days: [],
                 time_list: [],
                 table_list: [],
+                order_list: [],
                 days_date: {},
                 switch_type: 'month',
                 bottom_tips: {
@@ -199,7 +166,9 @@
                     should: 0,
                     solid: 0,
                     new_order: 0
-                }
+                },
+                mask: false,
+                order_list_popup: false
             }
         },
         computed: {
@@ -214,8 +183,12 @@
             },
             getCalendarMonthAndDay () {
                 return moment(this.select_day).format('MM月DD日');
+            },
+            getWaitOrderList () {
+                return this.order_list.filter(order => order.orderStatus === 1);
             }
         },
+        filters: {},
         watch: {
             currentMonth () {
                 let s_date = moment().month(this.currentMonth - 1).startOf('month').format('YYYYMMDD');
@@ -249,6 +222,7 @@
             },
             // 时间点预订单列表(B端大屏)
             handlePreOrderListByTime () {
+                this.order_list = [];
                 let api = 'com.ttdtrip.api.order.apis.service.PreOrderListByTimeApiService';
                 let data = { base: this.body, date: this.select_day.replace(/-/g, ''), mid: this.body.myUid, needTotalCount: 1 };
                 fetch.post(api, data).then(r => {
@@ -258,6 +232,7 @@
                         this.bottom_tips.solid = r.orders.filter(item => item.orderStatus === 5).length;
                         this.bottom_tips.new_order = r.totalCount;
                     }
+                    this.order_list = r.orders;
                 }).catch(e => {
                     console.error(e);
                 })
@@ -362,11 +337,29 @@
                     name: 'message'
                 })
             },
+            handleGoToTheOrderTreatedPage (item) {
+                this.$router.push({
+                    name: 'order_treated',
+                    query: { id: item.id }
+                })
+            },
             getFullDate (obj, separator) {
                 let month = obj.months < 10 ? '0' + obj.months : obj.months;
                 let day = obj.day < 10 ? '0' + obj.day : obj.day;
                 let arr = [obj.year, month, day];
                 return arr.join(separator);
+            },
+            getWaitNumber (item, wait_order) {
+                let arr = wait_order.filter(order => order.preOrder.time === item.startTime && order.preOrder.date == this.select_day.replace(/-/g, ''));
+                return arr.length;
+            },
+            handleShowOrderListPopup () {
+                this.mask = true;
+                this.order_list_popup = true;
+            },
+            handleHideOrderListPopup () {
+                this.mask = false;
+                this.order_list_popup = false;
             }
         }
     }
@@ -642,7 +635,7 @@
                     .scroll_width {
                         flex: 1;
                         max-width: 846px;
-                        overflow: auto;
+                        overflow-x: scroll;
                         .top {
                             /*display: flex;*/
                             /*align-items: center;*/
@@ -650,30 +643,49 @@
                             padding: 0 10px;
                             box-sizing: border-box;
                             white-space: nowrap;
-                            >div{
-                                display: inline-block;
-                                width: 50px;
-                                min-width: 50px;
-                                height: 100%;
-                                font-size: 15px;
-                                line-height: 54px;
-                                text-align: center;
-                                color: #fff;
-                                background-color: #78B6FC;
+                            .time_list_row {
+                                display: flex;
+                                align-items: center;
+                                justify-content: flex-start;
+                                >div{
+                                    /*display: inline-block;*/
+                                    width: 50px;
+                                    min-width: 50px;
+                                    height: 100%;
+                                    font-size: 15px;
+                                    line-height: 54px;
+                                    text-align: center;
+                                    color: #fff;
+                                    background-color: #78B6FC;
+                                    outline: none;
+                                }
                             }
                         }
                         .center{
-                            /*display: flex;*/
-                            /*align-items: center;*/
+                            display: flex;
+                            align-items: center;
                             padding: 0 10px;
                             box-sizing: border-box;
                             >div{
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
                                 width: 50px;
                                 min-width: 50px;
                                 height: 100%;
                                 font-size: 15px;
                                 line-height: 54px;
                                 text-align: center;
+                                background-color: #fff;
+                                .wait {
+                                    width: 42px;
+                                    height: 41px;
+                                    line-height: 41px;
+                                    color: #fff;
+                                    font-size: 23px;
+                                    background-color: #F5A623;
+                                    cursor: pointer;
+                                }
                             }
                         }
                         .bottom {
@@ -752,6 +764,72 @@
                             color: #3B53FF;
                             margin-left: 8px;
                         }
+                    }
+                }
+            }
+        }
+        .mask{
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: transparent;
+            z-index: 100;
+        }
+        .order_list{
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            width: 297px;
+            height: 234px;
+            padding: 24px 15px;
+            background-color: #fff;
+            box-shadow: 0 0 12px 3px rgba(169,180,255,0.21);
+            transform: translate(-50%, -50%);
+            border-radius: 5px;
+            z-index: 101;
+            box-sizing: border-box;
+            overflow-y: auto;
+            .order {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                max-height: 217px;
+                height: 46px;
+                color: #FFCF77;
+                padding: 0 11px;
+                border-radius: 10px;
+                box-sizing: border-box;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                white-space: nowrap;
+                &:hover{
+                    background-color: #F5A623;
+                    .order_name{
+                        color: #FFFFFF;
+                    }
+                    .order_arrow{
+                        .hover{
+                            display: block;
+                        }
+                        .normal {
+                            display: none;
+                        }
+                    }
+                }
+                .order_name {
+                    font-size: 22px;
+                    line-height: 31px;
+                }
+                .order_arrow {
+                    .hover {
+                        display: none;
+                    }
+                    img {
+                        width: 9px;
+                        height: 16px;
                     }
                 }
             }
