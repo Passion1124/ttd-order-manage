@@ -115,3 +115,8 @@ export function createCalendar (year, month, day){
 export function md5Result(val) {
     return md5(val);
 }
+
+export function formatNumber(n) {
+    n = n.toString();
+    return n[1] ? n : '0' + n;
+}

@@ -1,7 +1,7 @@
 <template>
     <div class="order_date_index">
         <div class="common_header">
-            <div class="common_title">餐厅名称</div>
+            <div class="common_title">{{ restaurant_name }}</div>
             <div class="icon_row">
                 <div class="preview_icon" @click="handleGoToTheTablePreview">
                     <img src="@/assets/images/preview.png" alt="">
@@ -27,7 +27,34 @@
                 <div class="calendar_text">{{ getCalendarText }}</div>
                 <div class="calendar_switch">
                     <div class="calendar_btn">
-                        <img src="@/assets/images/calendar.png" alt="">
+                        <img src="@/assets/images/calendar.png" alt="" @click="handleTriggerCalendar">
+                        <div class="calendar_date_box" v-if="calendar_show">
+                            <div class="calendar_nav">
+                                <div class="pre" @click="handleUpdateMonth('pre')">
+                                    <img src="@/assets/images/add_order_calendar_pre.png" alt="">
+                                </div>
+                                <div class="calendar_text">{{ calendar_year }}年{{ calendar_month }}月</div>
+                                <div class="next" @click="handleUpdateMonth('next')">
+                                    <img src="@/assets/images/add_order_calendar_next.png" alt="">
+                                </div>
+                            </div>
+                            <div class="week">
+                                <div>日</div>
+                                <div>一</div>
+                                <div>二</div>
+                                <div>三</div>
+                                <div>四</div>
+                                <div>五</div>
+                                <div>六</div>
+                            </div>
+                            <div class="day_list">
+                                <div v-for="(item, index) in calendar_days" :key="index" :class="{isCurrent: item.isNowMonth }">
+                                    <template v-if="item.isNowMonth">
+                                        <div class="day" :class="{ now: select_day === getFullDate(item, '-') }" @click="handleUpdateSelectDay(item)">{{item.day >= 10 ? item.day : '0' + item.day }}</div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="today" @click="handleUpdateDateIsNow">今天</div>
                     <div class="switch_type">
@@ -94,11 +121,27 @@
                             </div>
                         </div>
                         <div class="center">
-                            <div v-for="(item, index) in time_list" :key="index">
-                                <div class="wait" v-if="getWaitNumber(item, getWaitOrderList)" @click="handleShowOrderListPopup">{{ getWaitNumber(item, getWaitOrderList) }}</div>
+                            <div class="wait_order_list">
+                                <div v-for="(item, index) in time_list" :key="index">
+                                    <div class="wait" v-if="getWaitNumber(item, getWaitOrderList)" @click="handleShowOrderListPopup(item, 'wait_use')">{{ getWaitNumber(item, getWaitOrderList) }}</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="bottom"></div>
+                        <div class="bottom">
+                            <div class="table_data" v-for="(table, t_index) in table_list" :key="t_index">
+                                <div class="table_time_row">
+                                    <div class="time_list" v-for="(time, time_index) in time_list" :key="time_index">
+                                        <div :class="getTableStatusClassName(table, time_list[time_index - 1])" @click="handleShowOrderListPopup(time_list[time_index - 1], 'wait_eat', table)"></div>
+                                        <div :class="getTableStatusClassName(table, time)" @click="handleShowOrderListPopup(time, 'wait_eat', table)">
+                                            <div class="img_row">
+                                                <img class="waiting_img" src="@/assets/images/audit.png" alt="">
+                                                <img class="eating_img" src="@/assets/images/eating.png" alt="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,7 +174,7 @@
         </div>
         <div class="mask" v-if="mask" @click="handleHideOrderListPopup"></div>
         <div class="order_list" v-if="order_list_popup">
-            <div class="order" v-for="(item, index) in getWaitOrderList" :key="index" @click="handleGoToTheOrderTreatedPage(item)">
+            <div class="order" v-for="(item, index) in popup_order_list" :key="index" @click="handleGoToTheOrderTreatedPage(item)">
                 <div class="order_name">顾客{{ item.preOrder.contactor }}的订单</div>
                 <div class="order_arrow">
                     <img class="hover" src="@/assets/images/order_hover_arrow.png" alt="">
@@ -145,15 +188,21 @@
 <script>
     import moment from 'moment'
     import { mapGetters } from 'vuex'
-    import { createCalendar } from "../../utils/common";
     import fetch from '../../utils/fetch'
+    import { createCalendar, formatNumber } from "../../utils/common";
+    import { getUserInfo } from "../../utils/auth";
+
     export default {
         name: "order_date_index",
         data () {
             return {
+                restaurant_name: '餐厅名称',
                 currentDay: 1,
                 currentMonth: 1,
                 currentYear: 1970,
+                calendar_year: 1970,
+                calendar_month: 1,
+                calendar_days: [],
                 select_day: '',
                 days: [],
                 time_list: [],
@@ -168,7 +217,13 @@
                     new_order: 0
                 },
                 mask: false,
-                order_list_popup: false
+                order_list_popup: false,
+                order_filter: {
+                    status: '',
+                    time: ''
+                },
+                popup_order_list: [],
+                calendar_show: true
             }
         },
         computed: {
@@ -199,6 +254,9 @@
                 this.handlePreOrderListByTime();
                 this.handlePreOrderTableSchedule();
                 this.handlePreOrderBookTime();
+                if (this.calendar_show) {
+                    this.handleTriggerCalendar();
+                }
             }
         },
         created () {
@@ -206,6 +264,11 @@
         },
         methods: {
             init () {
+                let userInfo = getUserInfo();
+                console.log(userInfo);
+                if (userInfo) {
+                    this.restaurant_name = userInfo.goodsInfo['zh-cn'].name;
+                }
                 this.changeYearMonthDay('now');
                 this.handlePreOrderList();
             },
@@ -350,16 +413,69 @@
                 return arr.join(separator);
             },
             getWaitNumber (item, wait_order) {
-                let arr = wait_order.filter(order => order.preOrder.time === item.startTime && order.preOrder.date == this.select_day.replace(/-/g, ''));
+                let arr = wait_order.filter(order => order.preOrder.time === item.startTime && order.preOrder.date === item.date);
                 return arr.length;
             },
-            handleShowOrderListPopup () {
-                this.mask = true;
-                this.order_list_popup = true;
+            handleShowOrderListPopup (time, type, table) {
+                if (type === 'wait_use') {
+                    this.popup_order_list = this.order_list.filter(order => order.orderStatus === 1 && order.preOrder.time === time.startTime && order.preOrder.date === time.date);
+                    this.mask = true;
+                    this.order_list_popup = true;
+                } else {
+                    if (time && table) {
+                        let arr = this.order_list.filter(item => item.preOrder.time === time.startTime && item.preOrder.date === time.date && item.preOrder.tableNo === table.no);
+                        let eating = arr.find(item => item.orderStatus === 11);
+                        let waiting = arr.find(item => item.orderStatus === 3);
+                        if (eating) {
+                            this.handleGoToTheOrderTreatedPage(eating);
+                        }
+                        if (waiting) {
+                            this.handleGoToTheOrderTreatedPage(waiting);
+                        }
+                    }
+                }
             },
             handleHideOrderListPopup () {
                 this.mask = false;
                 this.order_list_popup = false;
+            },
+            getTableStatusClassName (table, time) {
+                if (table && time) {
+                    let arr = this.order_list.filter(item => item.preOrder.time === time.startTime && item.preOrder.date === time.date && item.preOrder.tableNo === table.no);
+                    let eating = arr.find(item => item.orderStatus === 11);
+                    let waiting = arr.find(item => item.orderStatus === 3);
+                    if (eating) {
+                        return 'eating';
+                    } else if (waiting) {
+                        return 'waiting';
+                    } else {
+                        return ''
+                    }
+                } else {
+                    return '';
+                }
+            },
+            handleTriggerCalendar () {
+                this.calendar_show = !this.calendar_show;
+                if (this.calendar_show) {
+                    this.calendar_year = this.currentYear;
+                    this.calendar_month = this.currentMonth;
+                    this.calendar_days = createCalendar(this.calendar_year, this.calendar_month, 1);
+                } else {
+                    this.calendar_days = [];
+                }
+            },
+            handleUpdateMonth (type) {
+                let full_date = this.calendar_year + formatNumber(this.calendar_month) + '01';
+                let date = '';
+                if (type === 'pre') {
+                    date = moment(full_date).subtract(1, 'months');
+                } else if (type === 'next') {
+                    date = moment(full_date).add(1, 'months');
+                }
+                this.calendar_year = date.year();
+                this.calendar_month = date.month() + 1;
+                this.calendar_days = createCalendar(this.calendar_year, this.calendar_month, 1);
             }
         }
     }
@@ -388,6 +504,7 @@
                         height: 38px;
                         background-color: #3B53FF;
                         border-radius: 4px;
+                        cursor: pointer;
                         &:first-of-type{
                             margin-right: 7px;
                         }
@@ -397,7 +514,7 @@
                         }
                     }
                 }
-                .calendar_text{
+                >.calendar_text{
                     flex: 1;
                     font-size: 26px;
                     line-height: 37px;
@@ -410,6 +527,7 @@
                     display: flex;
                     align-items: center;
                     .calendar_btn{
+                        position: relative;
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -421,6 +539,82 @@
                         img{
                             width: 25px;
                             height: 24px;
+                            cursor: pointer;
+                        }
+                        .calendar_date_box{
+                            position: absolute;
+                            left: -201px;
+                            top: 48px;
+                            width: 375px;
+                            height: 291px;
+                            background-color: #fff;
+                            box-shadow:0 3px 8px 4px rgba(219,236,255,0.68);
+                            z-index: 120;
+                            .calendar_nav{
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                width: 100%;
+                                height: 37px;
+                                background-color: #E4EFFC;
+                                .pre, .next{
+                                    width: 8px;
+                                    height: 14px;
+                                    img {
+                                        width: 100%;
+                                        height: 100%;
+                                        vertical-align: top;
+                                    }
+                                }
+                                .calendar_text{
+                                    font-size: 15px;
+                                    line-height: 21px;
+                                    color: #3B53FF;
+                                    margin: 0 14px;
+                                }
+                            }
+                            .week {
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                width: 100%;
+                                height: 39px;
+                                text-align: center;
+                                >div {
+                                    flex: 1;
+                                    font-size: 13px;
+                                    line-height: 19px;
+                                    color: #3B53FF;
+                                    font-weight: 500;
+                                }
+                            }
+                            .day_list{
+                                display: flex;
+                                align-items: center;
+                                flex-wrap: wrap;
+                                >div{
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    width: 14.2857%;
+                                    height: 36px;
+                                    box-sizing: border-box;
+                                    background-color: #fff;
+                                    .day{
+                                        width: 25px;
+                                        height: 25px;
+                                        font-size: 16px;
+                                        line-height: 23px;
+                                        border-radius: 50%;
+                                        color: #9B9B9B;
+                                        text-align: center;
+                                        &.now{
+                                            background-color: #3B53FF;
+                                            color: #fff !important;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     .today{
@@ -433,6 +627,7 @@
                         color: #fff;
                         margin-right: 14px;
                         text-align: center;
+                        cursor: pointer;
                     }
                     .switch_type{
                         display: flex;
@@ -449,6 +644,7 @@
                             color: #fff;
                             font-size: 18px;
                             line-height: 33px;
+                            cursor: pointer;
                             &.active{
                                 background-color: #fff;
                                 color: #3B53FF;
@@ -496,6 +692,7 @@
                                 border-right: 1px solid #E2F0FF; /* px */
                                 border-bottom: 1px solid #E2F0FF; /* px */
                                 background-color: #fff;
+                                cursor: pointer;
                             }
                             &:nth-of-type(7n){
                                 border-right: 0;
@@ -558,13 +755,18 @@
                     }
                 }
                 .type_is_month{
-                    display: flex;
-                    align-items: center;
+                    position: relative;
+                    width: 100%;
                     height: 530px;
+                    padding-left: 104px;
+                    box-sizing: border-box;
                     .fixed_width{
+                        position: absolute;
+                        left: 0;
+                        top: 0;
                         width: 104px;
-                        min-width: 104px;
                         height: 100%;
+                        z-index: 9;
                         .top {
                             padding-top: 5px;
                             text-align: center;
@@ -581,6 +783,7 @@
                             justify-content: center;
                             border-top: 1px solid #fff;
                             background-color: #F5A623;
+                            box-sizing: border-box;
                             .remain{
                                 width: 19px;
                                 height: 19px;
@@ -598,14 +801,14 @@
                         }
                         .bottom {
                             background-color: #fff;
-                            box-shadow:6px 2px 9px 0 rgba(169,180,255,0.21);
+                            box-shadow: 6px 2px 9px 0 rgba(169,180,255,0.21);
                             overflow-y: auto;
                             .table_row{
                                 display: flex;
                                 align-items: center;
                                 justify-content: space-between;
                                 width: 100%;
-                                height: 40px;
+                                height: 42px;
                                 padding: 0 15px 0 9px;
                                 box-sizing: border-box;
                                 .other_info{
@@ -633,30 +836,27 @@
                         }
                     }
                     .scroll_width {
-                        flex: 1;
-                        max-width: 846px;
+                        width: 100%;
                         overflow-x: scroll;
                         .top {
-                            /*display: flex;*/
-                            /*align-items: center;*/
-                            width: auto !important;
-                            padding: 0 10px;
+                            display: flex;
+                            align-items: center;
                             box-sizing: border-box;
                             white-space: nowrap;
                             .time_list_row {
+                                flex: 1;
                                 display: flex;
                                 align-items: center;
                                 justify-content: flex-start;
+                                background-color: #78B6FC;
                                 >div{
-                                    /*display: inline-block;*/
-                                    width: 50px;
-                                    min-width: 50px;
+                                    flex: 1;
+                                    min-width: 100px;
                                     height: 100%;
                                     font-size: 15px;
                                     line-height: 54px;
                                     text-align: center;
                                     color: #fff;
-                                    background-color: #78B6FC;
                                     outline: none;
                                 }
                             }
@@ -664,32 +864,107 @@
                         .center{
                             display: flex;
                             align-items: center;
-                            padding: 0 10px;
                             box-sizing: border-box;
-                            >div{
+                            /*white-space: nowrap;*/
+                            .wait_order_list{
+                                flex: 1;
                                 display: flex;
                                 align-items: center;
-                                justify-content: center;
-                                width: 50px;
-                                min-width: 50px;
-                                height: 100%;
-                                font-size: 15px;
-                                line-height: 54px;
-                                text-align: center;
-                                background-color: #fff;
-                                .wait {
-                                    width: 42px;
+                                justify-content: flex-start;
+                                box-shadow:0 5px 9px 0 rgba(169,180,255,0.21);
+                                >div{
+                                    flex: 1;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    min-width: 100px;
                                     height: 41px;
-                                    line-height: 41px;
-                                    color: #fff;
-                                    font-size: 23px;
-                                    background-color: #F5A623;
-                                    cursor: pointer;
+                                    font-size: 15px;
+                                    line-height: 54px;
+                                    text-align: center;
+                                    /*background-color: #fff;*/
+                                    .wait {
+                                        width: 42px;
+                                        height: 41px;
+                                        line-height: 41px;
+                                        color: #fff;
+                                        font-size: 23px;
+                                        background-color: #F5A623;
+                                        cursor: pointer;
+                                    }
                                 }
                             }
                         }
                         .bottom {
                             width: auto;
+                            .table_data {
+                                display: flex;
+                                align-items: center;
+                                height: 42px;
+                                box-sizing: border-box;
+                                .table_time_row{
+                                    flex: 1;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: flex-start;
+                                    height: 42px;
+                                    border-bottom: 1px solid #E2F0FF;
+                                    box-sizing: border-box;
+                                    >div {
+                                        flex: 1;
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: flex-start;
+                                        min-width: 100px;
+                                        height: 40px;
+                                        background-color: #fff;
+                                        >div {
+                                            flex: 1;
+                                            height: 100%;
+                                            &.waiting {
+                                                cursor: pointer;
+                                                background-color: #9DEDFF;
+                                                .img_row {
+                                                    background-color: #25D8FC;
+                                                    .waiting_img{
+                                                        display: block;
+                                                    }
+                                                }
+                                            }
+                                            &.eating {
+                                                background-color: #C3DFFE;
+                                                cursor: pointer;
+                                                .img_row {
+                                                    background-color: #76B6FE;
+                                                    .eating_img{
+                                                        display: block;
+                                                    }
+                                                }
+                                            }
+                                            .img_row{
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                width: 40px;
+                                                height: 40px;
+                                                img {
+                                                    display: none;
+                                                }
+                                                .waiting_img {
+                                                    width: 21px;
+                                                    height: 21px;
+                                                    vertical-align: top;
+                                                }
+                                                .eating_img {
+                                                    width: 24px;
+                                                    height: 24px;
+                                                    vertical-align: top;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     >div{
@@ -700,9 +975,10 @@
                             color: #fff;
                         }
                         .center{
+                            position: relative;
                             width: 100%;
                             height: 41px;
-                            box-shadow:0 5px 9px 0 rgba(169,180,255,0.21);
+                            z-index: 99;
                         }
                         .bottom {
                             width: 100%;
@@ -716,6 +992,7 @@
                 justify-content: space-between;
                 align-items: flex-start;
                 margin-top: 20px;
+                padding-bottom: 17px;
                 .left_tips{
                     >div{
                         display: flex;

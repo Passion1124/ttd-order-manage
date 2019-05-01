@@ -67,7 +67,7 @@
     import moment from 'moment'
     import { mapGetters } from 'vuex'
     import fetch from '../../utils/fetch'
-    import { createCalendar } from "../../utils/common";
+    import { createCalendar, formatNumber } from "../../utils/common";
 
     export default {
         name: "table_preview_index",
@@ -149,21 +149,15 @@
                 })
             },
             handleUpdateMonth (type) {
+                let full_date = this.currentYear + formatNumber(this.currentMonth) + formatNumber(this.currentDay);
+                let date = '';
                 if (type === 'pre') {
-                    if (this.currentMonth === 1) {
-                        this.currentYear -= 1;
-                        this.currentMonth = 12;
-                    } else {
-                        this.currentMonth -= 1;
-                    }
+                    date = moment(full_date).subtract(1, 'months');
                 } else if (type === 'next') {
-                    if (this.currentMonth === 12) {
-                        this.currentYear += 1;
-                        this.currentMonth = 1
-                    } else {
-                        this.currentMonth += 1;
-                    }
+                    date = moment(full_date).add(1, 'months');
                 }
+                this.currentYear = date.year();
+                this.currentMonth = date.month() + 1;
                 this.days = createCalendar(this.currentYear, this.currentMonth, this.currentDay);
             },
             handleUpdateTableFilter (item) {

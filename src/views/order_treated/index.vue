@@ -52,7 +52,8 @@
                             <div class="label_text text_four">用餐人数</div>
                         </div>
                         <div class="input_box">
-                            <input type="text" v-model="preOrderInfo.totalCount" :disabled="order.orderStatus !== 1">
+                            <!--order.orderStatus !== 1-->
+                            <input type="text" v-model="preOrderInfo.totalCount" :disabled="true">
                         </div>
                     </div>
                 </div>
@@ -73,7 +74,8 @@
                 <div class="order_explain">
                     <div class="order_explain_title">预约说明：</div>
                     <div class="textarea_row">
-                        <textarea v-model="preOrderInfo.customerRequest" :disabled="order.orderStatus !== 1"></textarea>
+                        <!--order.orderStatus !== 1-->
+                        <textarea v-model="preOrderInfo.customerRequest" :disabled="true"></textarea>
                     </div>
                 </div>
                 <div class="btn_row" :class="{ flex_center: order.orderStatus === 11 }">
@@ -223,9 +225,13 @@
                     str += '吸烟区 ';
                 } else if (this.select_table.allowSmoke === 0) {
                     str += '非吸烟区 ';
+                } else if (this.select_table.allowSmoke === -1) {
+                    str += '不介意吸烟区 '
                 }
                 if (this.select_table.isBox === 1) {
                     str += '包间';
+                } else {
+                    str += '非包间';
                 }
                 return str;
             }
@@ -495,6 +501,7 @@
                 /*height: 100%;*/
                 min-height: 694px;
                 padding-left: 34px;
+                padding-bottom: 20px;
                 box-shadow: 0 1px 7px 2px rgba(238, 240, 255, 1);
                 box-sizing: border-box;
                 .order_detail{
