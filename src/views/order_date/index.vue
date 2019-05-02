@@ -768,6 +768,7 @@
                         height: 100%;
                         z-index: 9;
                         .top {
+                            width: 100%;
                             padding-top: 5px;
                             text-align: center;
                             border-right: 1px solid #fff; /* px */
@@ -778,6 +779,7 @@
                             }
                         }
                         .center{
+                            width: 100%;
                             display: flex;
                             align-items: center;
                             justify-content: center;
@@ -800,6 +802,8 @@
                             }
                         }
                         .bottom {
+                            width: 100%;
+                            height: 436px;
                             background-color: #fff;
                             box-shadow: 6px 2px 9px 0 rgba(169,180,255,0.21);
                             overflow-y: auto;
@@ -836,8 +840,12 @@
                         }
                     }
                     .scroll_width {
+                        /*display: flex;*/
+                        /*flex-wrap: wrap;*/
                         width: 100%;
-                        overflow-x: scroll;
+                        height: 100%;
+                        max-width: 846px;
+                        overflow-x: auto;
                         .top {
                             display: flex;
                             align-items: center;
@@ -896,7 +904,7 @@
                             }
                         }
                         .bottom {
-                            width: auto;
+                            /*width: auto;*/
                             .table_data {
                                 display: flex;
                                 align-items: center;
@@ -969,20 +977,21 @@
                     }
                     >div{
                         .top {
-                            width: 100%;
+                            /*width: 100%;*/
                             height: 54px;
                             background-color: #78B6FC;
                             color: #fff;
                         }
                         .center{
                             position: relative;
-                            width: 100%;
+                            /*width: 100%;*/
                             height: 41px;
                             z-index: 99;
                         }
                         .bottom {
-                            width: 100%;
-                            height: 436px;
+                            /*width: 100%;*/
+                            height: 418px;
+                            box-sizing: border-box;
                         }
                     }
                 }

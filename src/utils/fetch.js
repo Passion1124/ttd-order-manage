@@ -7,9 +7,10 @@
 import axios from 'axios'
 import { getHeaderJson } from "./common";
 
+/* process.env.NODE_ENV === 'production' ? 'https://api.ttd-trip.com' : 'http://47.99.42.94:8080' */
 // 创建axios实例
 const service = axios.create({
-    baseURL: process.env.NODE_ENV === 'production' ? 'https://api.ttd-trip.com' : 'http://47.99.42.94:8080',
+    baseURL: 'http://47.99.42.94:8080',
     timeout: 20000 // 接口超时时间
 });
 
