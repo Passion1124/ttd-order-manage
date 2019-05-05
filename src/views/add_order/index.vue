@@ -99,7 +99,7 @@
                         <div class="table_row_list" v-for="(item, index) in getFilterTables" :key="index" :class="handleGetTableClass(item)" @click="handleUpdateSelectTable(item)">
                             <div class="table_row_list_title">桌台号 {{item.no}}</div>
                             <div class="table_row_list_num">{{item.siteCount}}人桌</div>
-                            <div class="table_row_list_name">{{item.name}}</div>
+                            <div class="table_row_list_name">{{item.name | getTableName(lang) }}</div>
                             <div class="table_row_list_smoke">{{ item.allowSmoke ? '吸烟区' : '非吸烟区' }}</div>
                             <div class="table_selected" v-if="select_table.no === item.no">
                                 <img src="@/assets/images/yes.png" alt="">
@@ -148,6 +148,7 @@
     import moment from 'moment'
     import { mapGetters } from 'vuex'
     import fetch from '../../utils/fetch'
+    import { validateEmail, validateMobile, validateValueIsInteger } from "../../utils/validate";
     import { createCalendar, md5Result } from "../../utils/common";
 
     export default {
@@ -183,7 +184,7 @@
             }
         },
         computed: {
-            ...mapGetters(['body']),
+            ...mapGetters(['body', 'lang']),
             getCurrentFullDay () {
                 return '' + this.currentYear + this.currentMonth + this.currentDay
             },
@@ -225,7 +226,14 @@
             }
         },
         filters: {
-
+            getTableName (json, lang) {
+                if (json && typeof json === 'string') {
+                    json = JSON.parse(json);
+                    return json[lang]
+                } else {
+                    return ''
+                }
+            }
         },
         created () {
             this.init();
@@ -287,15 +295,35 @@
                 })
             },
             handleCreatePreOrder () {
-                if (this.orderGen) return false;
-                this.preOrderInfo.date = this.select_day;
-                this.preOrderInfo.time = this.select_time.split('-')[0];
-                this.preOrderInfo.mid = this.body.myUid;
-                let { allowSmoke, isBox, no } = this.select_table;
-                this.preOrderInfo.allowSmoke = allowSmoke;
-                this.preOrderInfo.isBox = isBox;
-                this.preOrderInfo.tableNo = no;
-                this.handleOrderGen();
+                if (!this.select_day || !this.select_time) {
+                    alert('请选择用餐时间');
+                } else if (!this.select_table.no) {
+                    alert('请选择桌台');
+                } else if (!this.preOrderInfo.totalCount) {
+                    alert('请输入用餐人数');
+                } else if (!validateValueIsInteger(this.preOrderInfo.totalCount)) {
+                    alert('请输入正确的用餐人数');
+                } else if (!this.preOrderInfo.contactor) {
+                    alert('请输入预定人');
+                } else if (!this.preOrderInfo.mail) {
+                    alert('请输入邮箱');
+                } else if (!validateEmail(this.preOrderInfo.mail)) {
+                    alert('请输入正确的邮箱');
+                } else if (!this.preOrderInfo.phoneNo) {
+                    alert('请输入手机号');
+                } else if (!validateMobile(this.preOrderInfo.phoneNo)) {
+                    alert('请输入正确的手机号');
+                } else {
+                    if (this.orderGen) return false;
+                    this.preOrderInfo.date = this.select_day;
+                    this.preOrderInfo.time = this.select_time.split('-')[0];
+                    this.preOrderInfo.mid = this.body.myUid;
+                    let { allowSmoke, isBox, no } = this.select_table;
+                    this.preOrderInfo.allowSmoke = allowSmoke;
+                    this.preOrderInfo.isBox = isBox;
+                    this.preOrderInfo.tableNo = no;
+                    this.handleOrderGen();
+                }
             },
             handleGetTableClass (item) {
                 let str = '';

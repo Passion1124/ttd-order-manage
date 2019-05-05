@@ -7,8 +7,12 @@
 import router from './router'
 import store from './store'
 import { getUserInfo } from "./utils/auth";
+import { getSystemLanguage } from "./utils/common";
 
 const whiteList = ['/login']; // 不重定向白名单
+let lang_update = false; // 语言是否修改
+
+store.dispatch('updateLanguage', getSystemLanguage());
 
 router.beforeEach((to, form, next) => {
     if (getUserInfo()) {

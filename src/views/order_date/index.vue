@@ -227,7 +227,7 @@
             }
         },
         computed: {
-            ...mapGetters(['body']),
+            ...mapGetters(['body', 'lang']),
             getCheckedDateIsWeekNum () {
                 let arr = ['天', '一', '二', '三', '四', '五', '六'];
                 let week = moment(this.select_day).day();
@@ -267,7 +267,7 @@
                 let userInfo = getUserInfo();
                 console.log(userInfo);
                 if (userInfo) {
-                    this.restaurant_name = userInfo.goodsInfo['zh-cn'].name;
+                    this.restaurant_name = userInfo.goodsInfo[this.lang].name;
                 }
                 this.changeYearMonthDay('now');
                 this.handlePreOrderList();
@@ -362,6 +362,7 @@
             handleUpdateSelectDay (item) {
                 if (item.isNowMonth) {
                     this.select_day = this.getFullDate(item, '-');
+                    this.switch_type = 'day';
                 }
             },
             handleUpdateDateIsNow () {

@@ -5,7 +5,8 @@
 */
 
 const getters = {
-    body: state => state.statics.body
+    body: state => state.statics.body,
+    lang: state => state.statics.body.language
 };
 
 export default getters

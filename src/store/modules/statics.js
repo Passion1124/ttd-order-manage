@@ -16,11 +16,17 @@ const statics = {
     mutations: {
         SET_BODY: (state, body) => {
             state.body = body
+        },
+        SET_LANGUAGE: (state, language) => {
+            state.body.language = language
         }
     },
     actions: {
         updateBody ({ commit }, data) {
             commit('SET_BODY', data);
+        },
+        updateLanguage ({ commit }, data) {
+            commit('SET_LANGUAGE', data);
         }
     }
 };

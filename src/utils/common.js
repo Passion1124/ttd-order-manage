@@ -120,3 +120,13 @@ export function formatNumber(n) {
     n = n.toString();
     return n[1] ? n : '0' + n;
 }
+
+export function getSystemLanguage () {
+    let lang = navigator.language || navigator.userLanguage;
+    lang = lang.substr(0, 2);
+    if (lang === 'zh') {
+        return 'zh-cn'
+    } else {
+        return lang
+    }
+}

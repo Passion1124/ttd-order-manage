@@ -46,7 +46,7 @@
                     <img :class="{rotate: show.select}" src="@/assets/images/bottom_arrow.png" alt="">
                 </div>
                 <div class="area_select_box" v-if="show.select">
-                    <div v-for="(item, index) in area_arr" :key="index" v-if="item.value !== table_filter" @click="handleUpdateTableFilter(item)">{{ item.label }}</div>
+                    <div v-for="(item, index) in getFilterArea" :key="index" :class="{ active: item.value === table_filter }" @click="handleUpdateTableFilter(item)">{{ item.label }}</div>
                 </div>
             </div>
         </div>
@@ -54,7 +54,7 @@
             <div class="table_row_list" v-for="(item, index) in getFilterTables" :key="index" :class="handleGetTableClass(item)">
                 <div class="table_row_list_title">桌台号 {{item.no}}</div>
                 <div class="table_row_list_num">{{item.siteCount}}人桌</div>
-                <div class="table_row_list_name">{{item.name}}</div>
+                <div class="table_row_list_name">{{item.name | getTableName(lang) }}</div>
                 <div class="table_row_list_daily_schedule" v-if="item.dailySchedules.length">
                     <div v-for="(i, sIndex) in item.dailySchedules" :key="sIndex">{{ i }}</div>
                 </div>
@@ -79,8 +79,10 @@
                     { label: '全部区域', value: '' },
                     { label: '吸烟区', value: 'smoke' },
                     { label: '非吸烟区', value: 'unsmoke' },
-                    { label: '包间', value: 'box' }
+                    { label: '包间', value: 'box' },
+                    { label: '吸烟包间', value: 'box_smoke' }
                 ],
+                area_filter: [],
                 select_day: '',
                 days: [],
                 currentDay: 1,
@@ -93,7 +95,7 @@
             }
         },
         computed: {
-            ...mapGetters(['body']),
+            ...mapGetters(['body', 'lang']),
             getFullDate () {
                 return this.select_day ? moment(this.select_day).format('YYYY-MM-DD') : '';
             },
@@ -103,18 +105,44 @@
                 } else {
                     return this.table_list.filter(item => {
                         if (this.table_filter === 'smoke') {
-                            return item.allowSmoke;
+                            return item.allowSmoke && !item.isBox;
                         } else if (this.table_filter === 'unsmoke') {
-                            return !item.allowSmoke
+                            return !item.allowSmoke && !item.isBox;
                         } else if (this.table_filter === 'box') {
-                            return item.isBox
+                            return !item.allowSmoke && item.isBox;
+                        } else if (this.table_filter === 'box_smoke') {
+                            return item.isBox && item.allowSmoke;
                         }
                     })
+                }
+            },
+            getFilterArea () {
+                if (this.area_filter.length) {
+                    let arr = this.area_arr.filter(item => {
+                        if (item.value) {
+                            return this.area_filter.indexOf(item.value) !== -1;
+                        } else {
+                            return true;
+                        }
+                    });
+                    return arr;
+                } else {
+                    return this.area_arr;
                 }
             },
             getSelectText () {
                 let find = this.area_arr.find(item => item.value === this.table_filter);
                 return find ? find.label : '';
+            }
+        },
+        filters: {
+            getTableName (json, lang) {
+                if (json && typeof json === 'string') {
+                    json = JSON.parse(json);
+                    return json[lang]
+                } else {
+                    return ''
+                }
             }
         },
         watch: {
@@ -136,6 +164,7 @@
                 this.currentMonth = moment().month() + 1;
                 this.currentDay = moment().date();
                 this.days = createCalendar(this.currentYear, this.currentMonth, this.currentDay);
+                this.handlePreOrderTableList();
             },
             // 预订单桌台日计划v2
             handlePreOrderTableSchedule () {
@@ -144,6 +173,24 @@
                 fetch.post(api, data).then(r => {
                     console.log(r);
                     this.table_list = r.schedules;
+                }).catch(e => {
+                    console.error(e);
+                })
+            },
+            // 预订单桌台列表
+            handlePreOrderTableList () {
+                let api = 'com.ttdtrip.api.order.apis.service.PreOrderTableListApiService';
+                let data = { base: this.body, mid: this.body.myUid };
+                fetch.post(api, data).then(r => {
+                    console.log(r);
+                    let smoke = r.tables.find(item => item.allowSmoke && !item.isBox);
+                    let unsmoke = r.tables.find(item => !item.allowSmoke && !item.isBox);
+                    let box  = r.tables.find(item => !item.allowSmoke && item.isBox);
+                    let box_smoke = r.tables.find(item => item.allowSmoke && item.isBox);
+                    if (smoke) this.area_filter.push('smoke');
+                    if (unsmoke) this.area_filter.push('unsmoke');
+                    if (box) this.area_filter.push('box');
+                    if (box_smoke) this.area_filter.push('box_smoke');
                 }).catch(e => {
                     console.error(e);
                 })
@@ -301,7 +348,7 @@
                                 width: 25px;
                                 height: 25px;
                                 font-size: 16px;
-                                line-height: 23px;
+                                line-height: 25px;
                                 border-radius: 50%;
                                 color: #9B9B9B;
                                 text-align: center;
@@ -341,7 +388,7 @@
                     left: 0;
                     top: 36px;
                     width: 114px;
-                    height: 120px;
+                    /*height: 120px;*/
                     background-color: #fff;
                     box-shadow: 0 0 9px 2px rgba(169,180,255,0.21);
                     border-radius: 4px;
@@ -360,10 +407,14 @@
                         color: #000;
                         border-radius: 4px;
                         box-sizing: border-box;
+                        cursor: pointer;
                         &:last-of-type{
                             margin-bottom: 0;
                         }
                         &:hover{
+                            background-color: #C3DFFE;
+                        }
+                        &.active {
                             background-color: #C3DFFE;
                         }
                     }
