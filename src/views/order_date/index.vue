@@ -104,7 +104,7 @@
                             </div>
                             <div>待处理</div>
                         </div>
-                        <div class="bottom">
+                        <div class="bottom t_bottom">
                             <div class="table_row" v-for="(item, index) in table_list" :key="index">
                                 <div class="other_info">
                                     <span v-if="item.isBox">VIP</span>
@@ -127,7 +127,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="bottom">
+                        <div class="bottom o_bottom">
                             <div class="table_data" v-for="(table, t_index) in table_list" :key="t_index">
                                 <div class="table_time_row">
                                     <div class="time_list" v-for="(time, time_index) in time_list" :key="time_index">
@@ -223,7 +223,9 @@
                     time: ''
                 },
                 popup_order_list: [],
-                calendar_show: true
+                calendar_show: true,
+                set_time_loading: false,
+                set_timeout: ''
             }
         },
         computed: {
@@ -256,6 +258,17 @@
                 this.handlePreOrderBookTime();
                 if (this.calendar_show) {
                     this.handleTriggerCalendar();
+                }
+            },
+            switch_type (val) {
+                if (val === 'day') {
+                    this.$nextTick(_ => {
+                        let bottom = document.querySelectorAll('.bottom');
+                        console.log(bottom);
+                        bottom.forEach(item => {
+                            item.addEventListener('scroll', this.bottomScroll);
+                        })
+                    })
                 }
             }
         },
@@ -477,6 +490,31 @@
                 this.calendar_year = date.year();
                 this.calendar_month = date.month() + 1;
                 this.calendar_days = createCalendar(this.calendar_year, this.calendar_month, 1);
+            },
+            bottomScroll (even) {
+                let target = even.target;
+                let scrollTop = target.scrollTop;
+                let selector = '';
+                if (target.className.indexOf('t_bottom') !== -1) {
+                    selector = document.querySelector('.o_bottom');
+                } else {
+                    selector = document.querySelector('.t_bottom');
+                }
+                selector.removeEventListener('scroll', this.bottomScroll);
+                selector.scrollTop = scrollTop;
+                this.setTimeAddEventListener(selector);
+            },
+            setTimeAddEventListener (dom) {
+                if (!this.set_time_loading) {
+                    this.set_time_loading = true;
+                    this.set_timeout = setTimeout(_ => {
+                        dom.addEventListener('scroll', this.bottomScroll);
+                    }, 100)
+                } else {
+                    clearTimeout(this.set_timeout);
+                    this.set_time_loading = false;
+                    this.setTimeAddEventListener(dom);
+                }
             }
         }
     }
@@ -807,6 +845,7 @@
                             height: 436px;
                             background-color: #fff;
                             box-shadow: 6px 2px 9px 0 rgba(169,180,255,0.21);
+                            padding-bottom: 18px;
                             overflow-y: auto;
                             .table_row{
                                 display: flex;
@@ -816,6 +855,9 @@
                                 height: 42px;
                                 padding: 0 15px 0 9px;
                                 box-sizing: border-box;
+                                overflow: hidden;
+                                text-overflow:ellipsis;
+                                white-space: nowrap;
                                 .other_info{
                                     display: flex;
                                     align-items: center;
@@ -905,7 +947,7 @@
                             }
                         }
                         .bottom {
-                            /*width: auto;*/
+                            overflow-y: auto;
                             .table_data {
                                 display: flex;
                                 align-items: center;

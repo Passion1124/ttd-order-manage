@@ -123,10 +123,19 @@ export function formatNumber(n) {
 
 export function getSystemLanguage () {
     let lang = navigator.language || navigator.userLanguage;
-    lang = lang.substr(0, 2);
-    if (lang === 'zh') {
+    let lang_arr = ['zh', 'en', 'ja'];
+    let filter = lang_arr.filter(item => lang.indexOf(item) !== -1);
+    if (!filter.length) {
         return 'zh-cn'
+    }
+    if (lang.indexOf('zh') !== -1) {
+        if (lang !== 'zh-TW') {
+            return 'zh-cn'
+        } else {
+            return 'zh-tw'
+        }
     } else {
+        lang = lang.substr(0, 2);
         return lang
     }
 }

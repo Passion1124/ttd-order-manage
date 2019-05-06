@@ -6,15 +6,15 @@
                 <img src="@/assets/images/login_icon.png" alt="">
             </div>
             <div class="account">
-                <input type="text" v-model="account" placeholder="账号">
+                <input type="text" v-model="account" :placeholder="$t('login.account')">
             </div>
             <div class="password">
-                <input type="password" v-model="password" placeholder="密码">
+                <input type="password" v-model="password" :placeholder="$t('login.password')">
             </div>
             <div class="login_btn">
-                <button @click="handleLogin">登录</button>
+                <button @click="handleLogin">{{ $t('login.log') }}</button>
             </div>
-            <div class="login_tips">商务合作请联系：ttd-vip@ttd-trip.com</div>
+            <div class="login_tips">{{ $t('login.tips') }}：ttd-vip@ttd-trip.com</div>
         </div>
     </div>
 </template>
