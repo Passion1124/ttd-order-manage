@@ -196,7 +196,7 @@
         name: "order_date_index",
         data () {
             return {
-                restaurant_name: '餐厅名称',
+                restaurant_name: '',
                 currentDay: 1,
                 currentMonth: 1,
                 currentYear: 1970,

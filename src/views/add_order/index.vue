@@ -47,7 +47,7 @@
                             <div class="circular">
                                 <img class="order_people" src="@/assets/images/order_people.png" alt="">
                             </div>
-                            <div class="label_text text_three">预定人</div>
+                            <div class="label_text text_three">预订人</div>
                         </div>
                         <div class="input_box">
                             <input type="text" v-model="preOrderInfo.contactor">
