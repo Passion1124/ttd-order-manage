@@ -250,6 +250,7 @@
                     this.times = r.schedules;
                 }).catch(e => {
                     console.error(e);
+                    this.times = [];
                 })
             },
             handleGetTableList () {

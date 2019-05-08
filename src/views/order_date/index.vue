@@ -114,20 +114,20 @@
                             </div>
                         </div>
                     </div>
-                    <div class="scroll_width">
-                        <div class="top">
+                    <div class="scroll_width o_bottom">
+                        <div class="top" :style="{ top: div_top + 'px' }">
                             <div class="time_list_row">
                                 <div v-for="(item, index) in time_list" :key="index">{{ item.startTime }}</div>
                             </div>
                         </div>
-                        <div class="center">
+                        <div class="center" :style="{ top: div_center_top + 'px' }">
                             <div class="wait_order_list">
                                 <div v-for="(item, index) in time_list" :key="index">
                                     <div class="wait" v-if="getWaitNumber(item, getWaitOrderList)" @click="handleShowOrderListPopup(item, 'wait_use')">{{ getWaitNumber(item, getWaitOrderList) }}</div>
                                 </div>
                             </div>
                         </div>
-                        <div class="bottom o_bottom">
+                        <div class="bottom">
                             <div class="table_data" v-for="(table, t_index) in table_list" :key="t_index">
                                 <div class="table_time_row">
                                     <div class="time_list" v-for="(time, time_index) in time_list" :key="time_index">
@@ -225,7 +225,9 @@
                 popup_order_list: [],
                 calendar_show: true,
                 set_time_loading: false,
-                set_timeout: ''
+                set_timeout: '',
+                div_top: 0,
+                div_center_top: 0
             }
         },
         computed: {
@@ -263,8 +265,9 @@
             switch_type (val) {
                 if (val === 'day') {
                     this.$nextTick(_ => {
-                        let bottom = document.querySelectorAll('.bottom');
+                        let bottom = document.querySelectorAll('.t_bottom, .o_bottom');
                         console.log(bottom);
+                        this.handleUpdateTopValue(0);
                         bottom.forEach(item => {
                             item.addEventListener('scroll', this.bottomScroll);
                         })
@@ -350,26 +353,21 @@
                 if (this.switch_type !== type) this.switch_type = type
             },
             changeYearMonthDay (type) {
+                let date = '';
                 if (type === 'now') {
-                    this.currentYear = moment().year();
-                    this.currentMonth = moment().month() + 1;
-                    this.currentDay = moment().date();
-                    this.select_day = moment().format('YYYY-MM-DD');
+                    date = moment();
                 } else {
+                    let full_date = this.currentYear + formatNumber(this.currentMonth) + formatNumber(this.currentDay);
                     if (type === 'last') {
-                        this.currentMonth -= 1;
-                        if (this.currentMonth <= 0) {
-                            this.currentMonth = 12;
-                            this.currentYear -= 1;
-                        }
+                        date = moment(full_date).subtract(1, 'months');
                     } else if (type === 'next') {
-                        this.currentMonth += 1;
-                        if (this.currentMonth > 12) {
-                            this.currentMonth = 1;
-                            this.currentYear += 1;
-                        }
+                        date = moment(full_date).add(1, 'months');
                     }
                 }
+                this.currentYear = date.year();
+                this.currentMonth = date.month() + 1;
+                this.currentDay = date.date();
+                this.select_day = date.format('YYYY-MM-DD');
                 this.days = createCalendar(this.currentYear, this.currentMonth, this.currentDay);
             },
             handleUpdateSelectDay (item) {
@@ -502,6 +500,15 @@
                 }
                 selector.removeEventListener('scroll', this.bottomScroll);
                 selector.scrollTop = scrollTop;
+                let target_is_btm = target.scrollTop  + target.clientHeight === target.scrollHeight;
+                let selector_is_btm = selector.scrollTop + selector.clientHeight === selector.scrollHeight;
+                if (!target_is_btm && selector_is_btm) {
+                    selector.scrollTop = selector.scrollHeight - selector.clientHeight;
+                } else if (target_is_btm && !selector_is_btm) {
+                    selector.scrollTop = selector.scrollHeight - selector.clientHeight;
+                }
+                let o_btm_top = document.querySelector('.o_bottom').scrollTop;
+                this.handleUpdateTopValue(o_btm_top);
                 this.setTimeAddEventListener(selector);
             },
             setTimeAddEventListener (dom) {
@@ -515,6 +522,11 @@
                     this.set_time_loading = false;
                     this.setTimeAddEventListener(dom);
                 }
+            },
+            handleUpdateTopValue (scrollTop) {
+                this.div_top = scrollTop;
+                let scroll_top = document.querySelector('.o_bottom .top').clientHeight;
+                this.div_center_top = scroll_top + scrollTop;
             }
         }
     }
@@ -845,7 +857,7 @@
                             height: 436px;
                             background-color: #fff;
                             box-shadow: 6px 2px 9px 0 rgba(169,180,255,0.21);
-                            padding-bottom: 18px;
+                            /*padding-bottom: 18px;*/
                             overflow-y: auto;
                             .table_row{
                                 display: flex;
@@ -883,17 +895,23 @@
                         }
                     }
                     .scroll_width {
-                        /*display: flex;*/
-                        /*flex-wrap: wrap;*/
+                        position: relative;
                         width: 100%;
                         height: 100%;
                         max-width: 846px;
-                        overflow-x: auto;
+                        padding-top: 95px;
+                        box-sizing: border-box;
+                        overflow: auto;
                         .top {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
                             display: flex;
                             align-items: center;
                             box-sizing: border-box;
                             white-space: nowrap;
+                            z-index: 9;
                             .time_list_row {
                                 flex: 1;
                                 display: flex;
@@ -913,10 +931,15 @@
                             }
                         }
                         .center{
+                            position: absolute;
+                            left: 0;
+                            top: 54px;
+                            width: 100%;
+                            background-color: #fff;
                             display: flex;
                             align-items: center;
                             box-sizing: border-box;
-                            /*white-space: nowrap;*/
+                            z-index: 9;
                             .wait_order_list{
                                 flex: 1;
                                 display: flex;
@@ -947,7 +970,8 @@
                             }
                         }
                         .bottom {
-                            overflow-y: auto;
+                            /*overflow-y: auto;*/
+                            /*overflow-x: hidden;*/
                             .table_data {
                                 display: flex;
                                 align-items: center;
@@ -1033,7 +1057,7 @@
                         }
                         .bottom {
                             /*width: 100%;*/
-                            height: 418px;
+                            height: 436px;
                             box-sizing: border-box;
                         }
                     }

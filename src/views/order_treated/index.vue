@@ -291,6 +291,7 @@
                     this.times = r.schedules;
                 }).catch(e => {
                     console.error(e);
+                    this.times = [];
                 })
             },
             handleGetTableList () {
@@ -936,8 +937,8 @@
             left: 50%;
             top: 50%;
             width: 409px;
-            height: 284px;
-            padding: 49px 45px 0;
+            /*height: 284px;*/
+            padding: 49px 45px;
             transform: translate(-50%, -50%);
             background: rgba(255,255,255,1);
             box-shadow: 0 0 6px 4px rgba(206,227,250,0.26);
@@ -972,6 +973,7 @@
                     margin-right: 12px;
                     box-sizing: border-box;
                     margin-bottom: 20px;
+                    cursor: pointer;
                     &.active{
                         background-color: #3B53FF;
                         color: #fff;
