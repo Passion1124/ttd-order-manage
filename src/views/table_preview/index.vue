@@ -1,7 +1,7 @@
 <template>
     <div class="table_preview_index">
         <div class="common_header">
-            <div class="common_title">桌台预览</div>
+            <div class="common_title">{{ $t('other.table_preview') }}</div>
             <div class="back_arrow" @click="back">
                 <img src="@/assets/images/back_arrow.png" alt="">
             </div>
@@ -17,19 +17,19 @@
                         <div class="pre" @click="handleUpdateMonth('pre')">
                             <img src="@/assets/images/add_order_calendar_pre.png" alt="">
                         </div>
-                        <div class="calendar_text">{{ currentYear }}年{{ currentMonth }}月</div>
+                        <div class="calendar_text">{{ currentYear + $t('calendar.year') + currentMonth + $t('calendar.month') }}</div>
                         <div class="next" @click="handleUpdateMonth('next')">
                             <img src="@/assets/images/add_order_calendar_next.png" alt="">
                         </div>
                     </div>
                     <div class="week">
-                        <div>日</div>
-                        <div>一</div>
-                        <div>二</div>
-                        <div>三</div>
-                        <div>四</div>
-                        <div>五</div>
-                        <div>六</div>
+                        <div>{{ $t('calendar.day') }}</div>
+                        <div>{{ $t('calendar.one') }}</div>
+                        <div>{{ $t('calendar.two') }}</div>
+                        <div>{{ $t('calendar.three') }}</div>
+                        <div>{{ $t('calendar.four') }}</div>
+                        <div>{{ $t('calendar.five') }}</div>
+                        <div>{{ $t('calendar.six') }}</div>
                     </div>
                     <div class="day_list">
                         <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }">
@@ -52,8 +52,8 @@
         </div>
         <div class="table_row">
             <div class="table_row_list" v-for="(item, index) in getFilterTables" :key="index" :class="handleGetTableClass(item)">
-                <div class="table_row_list_title">桌台号 {{item.no}}</div>
-                <div class="table_row_list_num">{{item.siteCount}}人桌</div>
+                <div class="table_row_list_title">{{ $t('other.table_number') + item.no}}</div>
+                <div class="table_row_list_num">{{ item.siteCount + $t('other.people_table') }}</div>
                 <div class="table_row_list_name">{{item.name | getTableName(lang) }}</div>
                 <div class="table_row_list_daily_schedule" v-if="item.dailySchedules.length">
                     <div v-for="(i, sIndex) in item.dailySchedules" :key="sIndex">{{ i }}</div>
@@ -76,11 +76,11 @@
                 table_list: [],
                 table_filter: '',
                 area_arr: [
-                    { label: '全部区域', value: '' },
-                    { label: '吸烟区', value: 'smoke' },
-                    { label: '非吸烟区', value: 'unsmoke' },
-                    { label: '包间', value: 'box' },
-                    { label: '吸烟包间', value: 'box_smoke' }
+                    { label: this.$t('other.all_regions'), value: '' },
+                    { label: this.$t('other.smoking_area'), value: 'smoke' },
+                    { label: this.$t('other.non_smoking_area'), value: 'unsmoke' },
+                    { label: this.$t('other.private_room'), value: 'box' },
+                    { label: this.$t('other.smoking_compartment'), value: 'box_smoke' }
                 ],
                 area_filter: [],
                 select_day: '',

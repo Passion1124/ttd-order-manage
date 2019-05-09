@@ -1,7 +1,7 @@
 <template>
     <div class="add_order_index">
         <div class="common_header">
-            <div class="common_title">预约详情</div>
+            <div class="common_title">{{ $t('other.appointment_details') }}</div>
             <div class="back_arrow" @click="back">
                 <img src="@/assets/images/back_arrow.png" alt="">
             </div>
@@ -14,7 +14,7 @@
                             <div class="circular">
                                 <img class="time" src="@/assets/images/time.png" alt="">
                             </div>
-                            <div class="label_text text_four">用餐时间</div>
+                            <div class="label_text text_four">{{ $t('other.dinner_time') }}</div>
                         </div>
                         <div class="input_box">
                             <div class="eat_time_text" @click="handleUpdateSelectType('date')">{{ getEatTimeText }}</div>
@@ -25,10 +25,10 @@
                             <div class="circular">
                                 <img class="table_icon" src="@/assets/images/table_icon.png" alt="">
                             </div>
-                            <div class="label_text text_four">选择桌台</div>
+                            <div class="label_text text_four">{{ $t('other.table_selection') }}</div>
                         </div>
                         <div class="input_box">
-                            <div class="select_table_text" @click="handleUpdateSelectType('table')">{{select_table.no ? '桌台号 ' + select_table.no : ''}}</div>
+                            <div class="select_table_text" @click="handleUpdateSelectType('table')">{{select_table.no ? $t('other.table_number') + ' ' + select_table.no : ''}}</div>
                         </div>
                     </div>
                     <div class="eat_people">
@@ -36,7 +36,7 @@
                             <div class="circular">
                                 <img class="people" src="@/assets/images/people.png" alt="">
                             </div>
-                            <div class="label_text text_four">用餐人数</div>
+                            <div class="label_text text_four">{{ $t('other.number_of_diners') }}</div>
                         </div>
                         <div class="input_box">
                             <input type="number" v-model="preOrderInfo.totalCount">
@@ -47,7 +47,7 @@
                             <div class="circular">
                                 <img class="order_people" src="@/assets/images/order_people.png" alt="">
                             </div>
-                            <div class="label_text text_three">预订人</div>
+                            <div class="label_text text_three">{{ $t('other.reservations') }}</div>
                         </div>
                         <div class="input_box">
                             <input type="text" v-model="preOrderInfo.contactor">
@@ -58,7 +58,7 @@
                             <div class="circular">
                                 <img class="email" src="@/assets/images/email.png" alt="">
                             </div>
-                            <div class="label_text text_two">邮箱</div>
+                            <div class="label_text text_two">{{ $t('other.mailbox') }}</div>
                         </div>
                         <div class="input_box">
                             <input type="text" v-model="preOrderInfo.mail">
@@ -69,7 +69,7 @@
                             <div class="circular">
                                 <img class="phone" src="@/assets/images/phone.png" alt="">
                             </div>
-                            <div class="label_text text_three">手机号</div>
+                            <div class="label_text text_three">{{ $t('other.cell_phone_number') }}</div>
                         </div>
                         <div class="input_box">
                             <input type="text" v-model="preOrderInfo.phoneNo">
@@ -77,30 +77,30 @@
                     </div>
                 </div>
                 <div class="order_explain">
-                    <div class="order_explain_title">预约说明：</div>
+                    <div class="order_explain_title">{{ $t('other.appointment_instruction') }}：</div>
                     <div class="textarea_row">
                         <textarea v-model="preOrderInfo.customerRequest"></textarea>
                     </div>
                 </div>
                 <div class="btn_row">
-                    <button @click="back">取消</button>
-                    <button @click="handleCreatePreOrder">{{orderGen ? '预定中...' : '确认预定'}}</button>
+                    <button @click="back">{{ $t('other.cancel') }}</button>
+                    <button @click="handleCreatePreOrder">{{orderGen ? $t("other.booking") : $t('other.confirm_reservation')}}</button>
                 </div>
             </div>
             <div class="right_row">
                 <div class="selected_table" v-if="select_type === 'table'">
                     <div class="condition">
-                        <div :class="{active: !table_filter}" @click="handleUpdateTableFilter('')">全部区域</div>
-                        <div :class="{active: table_filter === 'unsmoke'}" @click="handleUpdateTableFilter('unsmoke')">非吸烟区</div>
-                        <div :class="{active: table_filter === 'smoke'}" @click="handleUpdateTableFilter('smoke')">吸烟区</div>
-                        <div :class="{active: table_filter === 'box'}" @click="handleUpdateTableFilter('box')">包间</div>
+                        <div :class="{active: !table_filter}" @click="handleUpdateTableFilter('')">{{ $t('other.all_regions') }}</div>
+                        <div :class="{active: table_filter === 'unsmoke'}" @click="handleUpdateTableFilter('unsmoke')">{{ $t('other.non_smoking_area') }}</div>
+                        <div :class="{active: table_filter === 'smoke'}" @click="handleUpdateTableFilter('smoke')">{{ $t('other.smoking_area') }}</div>
+                        <div :class="{active: table_filter === 'box'}" @click="handleUpdateTableFilter('box')">{{ $t('other.private_room') }}</div>
                     </div>
                     <div class="table_row">
                         <div class="table_row_list" v-for="(item, index) in getFilterTables" :key="index" :class="handleGetTableClass(item)" @click="handleUpdateSelectTable(item)">
-                            <div class="table_row_list_title">桌台号 {{item.no}}</div>
-                            <div class="table_row_list_num">{{item.siteCount}}人桌</div>
+                            <div class="table_row_list_title">{{ $t('other.table_number') + ' ' + item.no}}</div>
+                            <div class="table_row_list_num">{{ item.siteCount + $t('other.people_table') }}</div>
                             <div class="table_row_list_name">{{item.name | getTableName(lang) }}</div>
-                            <div class="table_row_list_smoke">{{ item.allowSmoke ? '吸烟区' : '非吸烟区' }}</div>
+                            <div class="table_row_list_smoke">{{ item.allowSmoke ? $t('other.smoking_area') : $t('other.non_smoking_area') }}</div>
                             <div class="table_selected" v-if="select_table.no === item.no">
                                 <img src="@/assets/images/yes.png" alt="">
                             </div>
@@ -113,19 +113,19 @@
                             <div class="pre_month" @click="handleUpdateMonth('pre')">
                                 <img src="@/assets/images/add_order_calendar_pre.png" alt="">
                             </div>
-                            <div class="show_year_month">{{currentYear}}年{{currentMonth}}月</div>
+                            <div class="show_year_month">{{currentYear + $t('calendar.year') + currentMonth + $t('calendar.month')}}</div>
                             <div class="next_month" @click="handleUpdateMonth('next')">
                                 <img src="@/assets/images/add_order_calendar_next.png" alt="">
                             </div>
                         </div>
                         <div class="week_nav">
-                            <div>星期天</div>
-                            <div>星期一</div>
-                            <div>星期二</div>
-                            <div>星期三</div>
-                            <div>星期四</div>
-                            <div>星期五</div>
-                            <div>星期六</div>
+                            <div>{{ $t('calendar.sunday') }}</div>
+                            <div>{{ $t('calendar.monday') }}</div>
+                            <div>{{ $t('calendar.tuesday') }}</div>
+                            <div>{{ $t('calendar.wednesday') }}</div>
+                            <div>{{ $t('calendar.thursday') }}</div>
+                            <div>{{ $t('calendar.friday') }}</div>
+                            <div>{{ $t('calendar.saturday') }}</div>
                         </div>
                         <div class="date_list">
                             <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }" @click="handleUpdateSelectDay(item)">
@@ -297,23 +297,23 @@
             },
             handleCreatePreOrder () {
                 if (!this.select_day || !this.select_time) {
-                    alert('请选择用餐时间');
+                    alert(this.$t('other.choose_dinner_time'));
                 } else if (!this.select_table.no) {
-                    alert('请选择桌台');
+                    alert(this.$t('other.choose_table'));
                 } else if (!this.preOrderInfo.totalCount) {
-                    alert('请输入用餐人数');
+                    alert(this.$t('other.input_dinner_number'));
                 } else if (!validateValueIsInteger(this.preOrderInfo.totalCount)) {
-                    alert('请输入正确的用餐人数');
+                    alert(this.$t('other.input_confirm_dinner_number'));
                 } else if (!this.preOrderInfo.contactor) {
-                    alert('请输入预定人');
+                    alert(this.$t('other.input_reservations'));
                 } else if (!this.preOrderInfo.mail) {
-                    alert('请输入邮箱');
+                    alert(this.$t('other.input_mailbox'));
                 } else if (!validateEmail(this.preOrderInfo.mail)) {
-                    alert('请输入正确的邮箱');
+                    alert(this.$t('other.input_confirm_mailbox'));
                 } else if (!this.preOrderInfo.phoneNo) {
-                    alert('请输入手机号');
+                    alert(this.$t('other.input_cell_phone_number'));
                 } else if (!validateMobile(this.preOrderInfo.phoneNo)) {
-                    alert('请输入正确的手机号');
+                    alert(this.$t('other.input_confirm_cell_phone_number'));
                 } else {
                     if (this.orderGen) return false;
                     this.preOrderInfo.date = this.select_day;
@@ -373,7 +373,7 @@
                     if (this.select_day && this.select_time) {
                         this.select_type = type
                     } else {
-                        alert('请选择用餐时间');
+                        alert(this.$t('other.input_dinner_number'));
                     }
                 }
             },

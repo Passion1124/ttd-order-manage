@@ -1,7 +1,7 @@
 <template>
     <div class="order_treated_index">
         <div class="common_header">
-            <div class="common_title">预约详情</div>
+            <div class="common_title">{{ $t('other.appointment_details') }}</div>
             <div class="back_arrow" @click="back">
                 <img src="@/assets/images/back_arrow.png" alt="">
             </div>
@@ -16,9 +16,9 @@
                         <div class="title_text">{{ preOrderInfo.contactor }}</div>
                     </div>
                     <div class="detail_row">
-                        <div class="list"><b>邮箱：</b>{{ preOrderInfo.mail }}</div>
-                        <div class="list"><b>电话：</b>{{ preOrderInfo.phoneNo }}</div>
-                        <div class="list"><b>区域偏好：</b>{{ getAreaPreference }}</div>
+                        <div class="list"><b>{{ $t('other.mailbox') }}：</b>{{ preOrderInfo.mail }}</div>
+                        <div class="list"><b>{{ $t('other.telephone') }}：</b>{{ preOrderInfo.phoneNo }}</div>
+                        <div class="list"><b>{{ $t('other.regional_preference') }}：</b>{{ getAreaPreference }}</div>
                     </div>
                 </div>
                 <div class="input_row">
@@ -27,7 +27,7 @@
                             <div class="circular">
                                 <img class="time" src="@/assets/images/time.png" alt="">
                             </div>
-                            <div class="label_text text_four">用餐时间</div>
+                            <div class="label_text text_four">{{ $t('other.dinner_time') }}</div>
                         </div>
                         <div class="input_box">
                             <div class="eat_time_text" @click="handleUpdateSelectType('date')">{{ getEatTimeText }}</div>
@@ -38,10 +38,10 @@
                             <div class="circular">
                                 <img class="table_icon" src="@/assets/images/table_icon.png" alt="">
                             </div>
-                            <div class="label_text text_four">选择桌台</div>
+                            <div class="label_text text_four">{{ $t('other.table_selection') }}</div>
                         </div>
                         <div class="input_box">
-                            <div class="select_table_text" @click="handleUpdateSelectType('table')">{{select_table.no ? '桌台号 ' + select_table.no : ''}}</div>
+                            <div class="select_table_text" @click="handleUpdateSelectType('table')">{{select_table.no ? $t('other.table_number') + ' ' + select_table.no : ''}}</div>
                         </div>
                     </div>
                     <div class="eat_people">
@@ -49,7 +49,7 @@
                             <div class="circular">
                                 <img class="people" src="@/assets/images/people.png" alt="">
                             </div>
-                            <div class="label_text text_four">用餐人数</div>
+                            <div class="label_text text_four">{{ $t('other.number_of_diners') }}</div>
                         </div>
                         <div class="input_box">
                             <!--order.orderStatus !== 1-->
@@ -72,7 +72,7 @@
                     </div>
                 </div>
                 <div class="order_explain">
-                    <div class="order_explain_title">预约说明：</div>
+                    <div class="order_explain_title">{{ $t('other.appointment_instruction') }}：</div>
                     <div class="textarea_row">
                         <!--order.orderStatus !== 1-->
                         <textarea v-model="preOrderInfo.customerRequest" :disabled="true"></textarea>
@@ -80,32 +80,32 @@
                 </div>
                 <div class="btn_row" :class="{ flex_center: order.orderStatus === 11 }">
                     <template v-if="order.orderStatus === 1">
-                        <button @click="handleRefuseOrder">拒绝预定</button>
-                        <button @click="handleSureOrder">确认预定</button>
+                        <button @click="handleRefuseOrder">{{ $t('other.refusal_of_reservation') }}</button>
+                        <button @click="handleSureOrder">{{ $t('other.confirm_reservation') }}</button>
                     </template>
                     <template v-else-if="order.orderStatus === 3">
-                        <button @click="handleRefuseOrder">取消预定</button>
-                        <button @click="handlePreOrderUsed">客人到店</button>
+                        <button @click="handleRefuseOrder">{{ $t('other.cancel_the_reservation') }}</button>
+                        <button @click="handlePreOrderUsed">{{ $t('other.guest_to_shop') }}</button>
                     </template>
                     <template v-else-if="order.orderStatus === 11">
-                        <button @click="handlePreOrderDone">客人离店</button>
+                        <button @click="handlePreOrderDone">{{ $t('other.guest_departure') }}</button>
                     </template>
                 </div>
             </div>
             <div class="right_row">
                 <div class="selected_table" v-if="select_type === 'table'">
                     <div class="condition">
-                        <div :class="{active: !table_filter}" @click="handleUpdateTableFilter('')">全部区域</div>
-                        <div :class="{active: table_filter === 'unsmoke'}" @click="handleUpdateTableFilter('unsmoke')">非吸烟区</div>
-                        <div :class="{active: table_filter === 'smoke'}" @click="handleUpdateTableFilter('smoke')">吸烟区</div>
-                        <div :class="{active: table_filter === 'box'}" @click="handleUpdateTableFilter('box')">包间</div>
+                        <div :class="{active: !table_filter}" @click="handleUpdateTableFilter('')">{{ $t('other.all_regions') }}</div>
+                        <div :class="{active: table_filter === 'unsmoke'}" @click="handleUpdateTableFilter('unsmoke')">{{ $t('other.non_smoking_area') }}</div>
+                        <div :class="{active: table_filter === 'smoke'}" @click="handleUpdateTableFilter('smoke')">{{ $t('other.smoking_area') }}</div>
+                        <div :class="{active: table_filter === 'box'}" @click="handleUpdateTableFilter('box')">{{ $t('other.private_room') }}</div>
                     </div>
                     <div class="table_row">
                         <div class="table_row_list" v-for="(item, index) in getFilterTables" :key="index" :class="handleGetTableClass(item)" @click="handleUpdateSelectTable(item)">
-                            <div class="table_row_list_title">桌台号 {{item.no}}</div>
-                            <div class="table_row_list_num">{{item.siteCount}}人桌</div>
-                            <div class="table_row_list_name">{{item.name}}</div>
-                            <div class="table_row_list_smoke">{{ item.allowSmoke ? '吸烟区' : '非吸烟区' }}</div>
+                            <div class="table_row_list_title">{{ $t('other.table_number') + ' ' + item.no}}</div>
+                            <div class="table_row_list_num">{{ item.siteCount + $t('other.people_table') }}</div>
+                            <div class="table_row_list_name">{{item.name | getTableName(lang) }}</div>
+                            <div class="table_row_list_smoke">{{ item.allowSmoke ? $t('other.smoking_area') : $t('other.non_smoking_area') }}</div>
                             <div class="table_selected" v-if="select_table.no === item.no">
                                 <img src="@/assets/images/yes.png" alt="">
                             </div>
@@ -118,19 +118,19 @@
                             <div class="pre_month" @click="handleUpdateMonth('pre')">
                                 <img src="@/assets/images/add_order_calendar_pre.png" alt="">
                             </div>
-                            <div class="show_year_month">{{currentYear}}年{{currentMonth}}月</div>
+                            <div class="show_year_month">{{ currentYear + $t('calendar.year') + currentMonth + $t('calendar.month') }}</div>
                             <div class="next_month" @click="handleUpdateMonth('next')">
                                 <img src="@/assets/images/add_order_calendar_next.png" alt="">
                             </div>
                         </div>
                         <div class="week_nav">
-                            <div>星期天</div>
-                            <div>星期一</div>
-                            <div>星期二</div>
-                            <div>星期三</div>
-                            <div>星期四</div>
-                            <div>星期五</div>
-                            <div>星期六</div>
+                            <div>{{ $t('calendar.sunday') }}</div>
+                            <div>{{ $t('calendar.monday') }}</div>
+                            <div>{{ $t('calendar.tuesday') }}</div>
+                            <div>{{ $t('calendar.wednesday') }}</div>
+                            <div>{{ $t('calendar.thursday') }}</div>
+                            <div>{{ $t('calendar.friday') }}</div>
+                            <div>{{ $t('calendar.saturday') }}</div>
                         </div>
                         <div class="date_list">
                             <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }" @click="handleUpdateSelectDay(item)">
@@ -148,14 +148,14 @@
         </div>
         <div class="mask" v-if="mask" @click="handleHidePopupAndMask"></div>
         <div class="popup" v-if="popup">
-            <div class="p_title">确认要{{ order.orderStatus === 1 ? '拒绝' : '取消'}}客人的订单吗？</div>
-            <div class="p_text">{{ order.orderStatus === 1 ? '拒绝' : '取消'}}理由</div>
+            <div class="p_title">{{ order.orderStatus === 1 ? $t('other.confirm_refuse_guest_order') : $t('other.confirm_cancel_guest_order')}}</div>
+            <div class="p_text">{{ order.orderStatus === 1 ? $t('other.refuse_reason') : $t('other.cancel_reason')}}</div>
             <div class="p_tags">
                 <div v-for="(item, index) in reasons" :key="index" :class="{ active: item === reason }" @click="handleUpdateReasonText(item)">{{ item }}</div>
             </div>
             <div class="p_btn_group">
-                <button @click="handleHidePopupAndMask">取消</button>
-                <button @click="handleConfirmCancelOrder">确认</button>
+                <button @click="handleHidePopupAndMask">{{ $t('other.cancel') }}</button>
+                <button @click="handleConfirmCancelOrder">{{ $t('other.confirm') }}</button>
             </div>
         </div>
     </div>
@@ -222,16 +222,16 @@
             getAreaPreference () {
                 let str = '';
                 if (this.select_table.allowSmoke === 1) {
-                    str += '吸烟区 ';
+                    str += this.$t('other.smoking_area') + ' ';
                 } else if (this.select_table.allowSmoke === 0) {
-                    str += '非吸烟区 ';
+                    str += this.$t('other.non_smoking_area') + ' ';
                 } else if (this.select_table.allowSmoke === -1) {
-                    str += '不介意吸烟区 '
+                    str += this.$t('other.not_mind_smoking_area') + ' '
                 }
                 if (this.select_table.isBox === 1) {
-                    str += '包间';
+                    str += this.$t('other.private_room');
                 } else {
-                    str += '非包间';
+                    str += this.$t('other.non_private_room');
                 }
                 return str;
             }
@@ -386,9 +386,9 @@
             // 点击确认预定
             handleSureOrder () {
                 if (!this.select_day || !this.select_time) {
-                    alert('请选择用餐时间');
+                    alert(this.$t('other.choose_dinner_time'));
                 } else if (!this.select_table.no) {
-                    alert('请选择桌台');
+                    alert(this.$t('other.choose_table'));
                 } else {
                     this.handlePreOrderConfirm(1);
                 }
@@ -415,7 +415,7 @@
                         this.handlePreOrderCancel();
                     }
                 } else {
-                    alert('请选择' + this.order.orderStatus === 1 ? '取消' : '拒绝' + '理由');
+                    alert(this.order.orderStatus === 1 ? this.$t('other.choose_refuse_reason') : this.$t('other.choose_cancel_reason'));
                 }
             },
             handleGetTableClass (item) {

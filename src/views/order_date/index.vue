@@ -9,6 +9,7 @@
                 <div class="add_icon" @click="handleGoToTheAddOrderPage">
                     <img src="@/assets/images/add.png" alt="">
                 </div>
+                <div class="logout_text" @click="handleUserLogout">退出登录</div>
                 <div class="remind_icon" @click="handleGoToTheMessagePage" v-if="false">
                     <img src="@/assets/images/remind.png" alt="">
                 </div>
@@ -33,19 +34,19 @@
                                 <div class="pre" @click="handleUpdateMonth('pre')">
                                     <img src="@/assets/images/add_order_calendar_pre.png" alt="">
                                 </div>
-                                <div class="calendar_text">{{ calendar_year }}年{{ calendar_month }}月</div>
+                                <div class="calendar_text">{{ calendar_year + $t('calendar.year') + calendar_month + $t('calendar.month') }}</div>
                                 <div class="next" @click="handleUpdateMonth('next')">
                                     <img src="@/assets/images/add_order_calendar_next.png" alt="">
                                 </div>
                             </div>
                             <div class="week">
-                                <div>日</div>
-                                <div>一</div>
-                                <div>二</div>
-                                <div>三</div>
-                                <div>四</div>
-                                <div>五</div>
-                                <div>六</div>
+                                <div>{{ $t('calendar.day') }}</div>
+                                <div>{{ $t('calendar.one') }}</div>
+                                <div>{{ $t('calendar.two') }}</div>
+                                <div>{{ $t('calendar.three') }}</div>
+                                <div>{{ $t('calendar.four') }}</div>
+                                <div>{{ $t('calendar.five') }}</div>
+                                <div>{{ $t('calendar.six') }}</div>
                             </div>
                             <div class="day_list">
                                 <div v-for="(item, index) in calendar_days" :key="index" :class="{isCurrent: item.isNowMonth }">
@@ -56,23 +57,23 @@
                             </div>
                         </div>
                     </div>
-                    <div class="today" @click="handleUpdateDateIsNow">今天</div>
+                    <div class="today" @click="handleUpdateDateIsNow">{{ $t('calendar.today') }}</div>
                     <div class="switch_type">
-                        <div class="month_type" :class="{ active: switch_type === 'month' }" @click="handleUpdateSwitchType('month')">月</div>
-                        <div class="day_type" :class="{ active: switch_type === 'day' }" @click="handleUpdateSwitchType('day')">日</div>
+                        <div class="month_type" :class="{ active: switch_type === 'month' }" @click="handleUpdateSwitchType('month')">{{ $t('calendar.month')}}</div>
+                        <div class="day_type" :class="{ active: switch_type === 'day' }" @click="handleUpdateSwitchType('day')">{{ $t('calendar.day')}}</div>
                     </div>
                 </div>
             </div>
             <div class="calendar_main">
                 <div class="type_is_day" v-if="switch_type === 'month'">
                     <div class="week_title">
-                        <div>星期天</div>
-                        <div>星期一</div>
-                        <div>星期二</div>
-                        <div>星期三</div>
-                        <div>星期四</div>
-                        <div>星期五</div>
-                        <div>星期六</div>
+                        <div>{{ $t('calendar.sunday') }}</div>
+                        <div>{{ $t('calendar.monday') }}</div>
+                        <div>{{ $t('calendar.tuesday') }}</div>
+                        <div>{{ $t('calendar.wednesday') }}</div>
+                        <div>{{ $t('calendar.thursday') }}</div>
+                        <div>{{ $t('calendar.friday') }}</div>
+                        <div>{{ $t('calendar.saturday') }}</div>
                     </div>
                     <div class="date_list">
                         <div v-for="(item, index) in days" :key="index" :class="{isCurrent: item.isNowMonth }" @click="handleUpdateSelectDay(item)">
@@ -80,11 +81,11 @@
                                 <div class="date" :class="{ now: select_day === getFullDate(item, '-') }">{{item.day >= 10 ? item.day : '0' + item.day }}</div>
                                 <template v-if="days_date[getFullDate(item, '')]">
                                     <div class="wait_used" v-if="days_date[getFullDate(item, '')].waitUsedCount">
-                                        <div>待就餐</div>
+                                        <div>{{ $t('other.stay_dinner') }}</div>
                                         <div>{{days_date[getFullDate(item, '')].waitUsedCount}}</div>
                                     </div>
                                     <div class="wait_confirm" v-if="days_date[getFullDate(item, '')].waitCount">
-                                        <div>待处理</div>
+                                        <div>{{ $t('other.pending_disposal') }}</div>
                                         <div>{{days_date[getFullDate(item, '')].waitCount}}</div>
                                     </div>
                                 </template>
@@ -102,7 +103,7 @@
                             <div class="remain">
                                 <img src="@/assets/images/remain.png" alt="">
                             </div>
-                            <div>待处理</div>
+                            <div>{{ $t('other.pending_disposal') }}</div>
                         </div>
                         <div class="bottom t_bottom">
                             <div class="table_row" v-for="(item, index) in table_list" :key="index">
@@ -110,7 +111,7 @@
                                     <span v-if="item.isBox">VIP</span>
                                     <img src="@/assets/images/smoke.png" alt="" v-if="item.allowSmoke">
                                 </div>
-                                <div class="table_num">{{ item.no }}号桌</div>
+                                <div class="table_num">{{ item.no + $t('other.number_table') }}</div>
                             </div>
                         </div>
                     </div>
@@ -148,26 +149,26 @@
             <div class="calendar_bottom">
                 <div class="left_tips">
                     <div>
-                        <div>未处理：{{ bottom_tips.remain }}</div>
-                        <div>今日应到店：{{ bottom_tips.should }}</div>
+                        <div>{{ $t('other.untreated') }}：{{ bottom_tips.remain }}</div>
+                        <div>{{ $t('other.should_arrive') }}：{{ bottom_tips.should }}</div>
                     </div>
                     <div>
-                        <div>今日新订：{{ bottom_tips.new_order }}</div>
-                        <div>今日实到店：{{ bottom_tips.solid }}</div>
+                        <div>{{ $t('other.newly_revised') }}：{{ bottom_tips.new_order }}</div>
+                        <div>{{ $t('other.solid_arrive') }}：{{ bottom_tips.solid }}</div>
                     </div>
                 </div>
                 <div class="right_tips">
                     <div class="eat">
                         <div class="tips_bg"></div>
-                        <div class="tips_text">就餐中</div>
+                        <div class="tips_text">{{ $t('other.dining') }}</div>
                     </div>
                     <div class="order">
                         <div class="tips_bg"></div>
-                        <div class="tips_text">待就餐</div>
+                        <div class="tips_text">{{ $t('other.stay_dinner') }}</div>
                     </div>
                     <div class="handle">
                         <div class="tips_bg"></div>
-                        <div class="tips_text">待处理</div>
+                        <div class="tips_text">{{ $t('other.pending_disposal') }}</div>
                     </div>
                 </div>
             </div>
@@ -175,7 +176,7 @@
         <div class="mask" v-if="mask" @click="handleHideOrderListPopup"></div>
         <div class="order_list" v-if="order_list_popup">
             <div class="order" v-for="(item, index) in popup_order_list" :key="index" @click="handleGoToTheOrderTreatedPage(item)">
-                <div class="order_name">顾客{{ item.preOrder.contactor }}的订单</div>
+                <div class="order_name">{{ $t('other.customer') + item.preOrder.contactor + $t('other.of_order') }}</div>
                 <div class="order_arrow">
                     <img class="hover" src="@/assets/images/order_hover_arrow.png" alt="">
                     <img class="normal" src="@/assets/images/order_arrow.png" alt="">
@@ -190,7 +191,7 @@
     import { mapGetters } from 'vuex'
     import fetch from '../../utils/fetch'
     import { createCalendar, formatNumber } from "../../utils/common";
-    import { getUserInfo } from "../../utils/auth";
+    import {clearLocalCacheData, getUserInfo} from "../../utils/auth";
 
     export default {
         name: "order_date_index",
@@ -227,21 +228,24 @@
                 set_time_loading: false,
                 set_timeout: '',
                 div_top: 0,
-                div_center_top: 0
+                div_center_top: 0,
+                set_interval: ''
             }
         },
         computed: {
             ...mapGetters(['body', 'lang']),
             getCheckedDateIsWeekNum () {
-                let arr = ['天', '一', '二', '三', '四', '五', '六'];
+                let arr = [this.$t('calendar.sunday'), this.$t('calendar.monday'), this.$t('calendar.tuesday'), this.$t('calendar.wednesday'), this.$t('calendar.thursday'), this.$t('calendar.friday'), this.$t('calendar.saturday')];
                 let week = moment(this.select_day).day();
-                return '星期' + arr[week];
+                return arr[week];
             },
             getCalendarText () {
-                return this.select_day ? moment(this.select_day).format('YYYY年MM月DD日') : moment().format('YYYY年MM月DD日');
+                let str = 'YYYY' + this.$t('calendar.year') + 'MM' + this.$t('calendar.month') + 'DD' + this.$t('calendar.day');
+                return this.select_day ? moment(this.select_day).format(str) : moment().format(str);
             },
             getCalendarMonthAndDay () {
-                return moment(this.select_day).format('MM月DD日');
+                let str = 'MM' + this.$t('calendar.month') + 'DD' + this.$t('calendar.day');
+                return moment(this.select_day).format(str);
             },
             getWaitOrderList () {
                 return this.order_list.filter(order => order.orderStatus === 1);
@@ -273,10 +277,27 @@
                         })
                     })
                 }
+            },
+            'bottom_tips.remain' (val) {
+                if (val) {
+                    let s_date = moment().month(this.currentMonth - 1).startOf('month').format('YYYYMMDD');
+                    let e_date = moment().month(this.currentMonth - 1).endOf('month').format('YYYYMMDD');
+                    this.handleGetPreOrderDateList(s_date, e_date);
+                    this.handlePreOrderListByTime();
+                }
             }
         },
         created () {
             this.init();
+        },
+        mounted () {
+            this.set_interval = setInterval(_ => {
+                this.handlePreOrderList();
+            }, 3000);
+        },
+        destroyed () {
+            clearInterval(this.set_interval);
+            console.log('destroyed');
         },
         methods: {
             init () {
@@ -322,7 +343,7 @@
                 let data = { base: this.body, mid: this.body.myUid, page: 1, size: 10000, needTotalCount: 1, hasConfirmed: 0 };
                 fetch.post(api, data).then(r => {
                     console.log(r);
-                    this.bottom_tips.remain = r.totalCount
+                    this.bottom_tips.remain = r.totalCount;
                 }).catch(e => {
                     console.error(e);
                 })
@@ -527,6 +548,11 @@
                 this.div_top = scrollTop;
                 let scroll_top = document.querySelector('.o_bottom .top').clientHeight;
                 this.div_center_top = scroll_top + scrollTop;
+            },
+            // 退出登录
+            handleUserLogout () {
+                clearLocalCacheData();
+                location.reload();
             }
         }
     }
